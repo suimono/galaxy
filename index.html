@@ -104,47 +104,57 @@
             </div>
 
             <!-- Controls Panel (Model Android Bottom Sheet) -->
-            <div class="glass-panel p-5 rounded-t-3xl sm:rounded-2xl sm:mx-auto sm:mb-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col gap-4 w-full sm:w-80 transition-all duration-300 border-b-0 sm:border-b">
+            <div class="glass-panel p-5 rounded-t-3xl sm:rounded-2xl sm:mx-auto sm:mb-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col w-full sm:w-80 transition-all duration-300 border-b-0 sm:border-b">
                 
                 <!-- Header Panel -->
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center w-full">
                     <div>
-                        <h1 class="text-xl font-light tracking-wide text-white mb-0.5">KINETIC<span class="font-bold text-blue-400">DUST</span></h1>
                         <p class="text-[10px] text-gray-400">Partikel Interaktif Gestur</p>
                     </div>
-                    <button id="btn-fullscreen" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors" title="Layar Penuh">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                    </button>
+                    <div class="flex gap-2">
+                        <!-- Tombol Toggle Dropdown -->
+                        <button id="btn-toggle-panel" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors" title="Sembunyikan Panel">
+                            <svg id="icon-toggle" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <!-- Tombol Fullscreen -->
+                        <button id="btn-fullscreen" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors" title="Layar Penuh">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="space-y-3">
-                    <!-- Pattern Selection -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Pola Partikel</label>
-                        <select id="pattern-select" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors appearance-none">
-                            <option value="galaxy" class="bg-gray-900">Galaksi Spiral</option>
-                            <option value="sphere" class="bg-gray-900">Bola Kuantum</option>
-                            <option value="torus" class="bg-gray-900">Torus Magnetik</option>
-                            <option value="dna" class="bg-gray-900">Heliks DNA</option>
-                            <option value="cube" class="bg-gray-900">Inti Tesseract</option>
-                        </select>
-                    </div>
+                <!-- Bagian Isi Panel yang bisa dilipat (Collapsible Content) -->
+                <div id="panel-content" class="transition-all duration-500 ease-in-out overflow-hidden flex flex-col gap-4 max-h-[500px] opacity-100 mt-4">
+                    <div class="space-y-3">
+                        <!-- Pattern Selection -->
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Pola Partikel</label>
+                            <select id="pattern-select" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors appearance-none">
+                                <option value="galaxy" class="bg-gray-900">Galaksi Spiral</option>
+                                <option value="sphere" class="bg-gray-900">Bola Kuantum</option>
+                                <option value="torus" class="bg-gray-900">Torus Magnetik</option>
+                                <option value="dna" class="bg-gray-900">Heliks DNA</option>
+                                <option value="cube" class="bg-gray-900">Inti Tesseract</option>
+                            </select>
+                        </div>
 
-                    <!-- Color Picker -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Warna Utama</label>
-                        <div class="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl p-2">
-                            <input type="color" id="color-picker" value="#00d2ff" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0 p-0 shadow-sm outline-none">
-                            <span class="text-sm font-mono text-gray-300 uppercase" id="color-value">#00d2ff</span>
+                        <!-- Color Picker -->
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Warna Utama</label>
+                            <div class="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl p-2">
+                                <input type="color" id="color-picker" value="#00d2ff" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0 p-0 shadow-sm outline-none">
+                                <span class="text-sm font-mono text-gray-300 uppercase" id="color-value">#00d2ff</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- System Controls -->
-                <button id="btn-camera" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                    Mulai Kamera
-                </button>
+                    <!-- System Controls -->
+                    <button id="btn-camera" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        Mulai Kamera
+                    </button>
+                </div>
+                
             </div>
         </div>
     </div>
@@ -183,6 +193,11 @@
         const canvasCtx = canvasElement.getContext('2d');
         const gestureBar = document.getElementById('gesture-bar');
         const trackingStatus = document.getElementById('tracking-status');
+        
+        // DOM Elements for Dropdown Toggle
+        const btnTogglePanel = document.getElementById('btn-toggle-panel');
+        const iconToggle = document.getElementById('icon-toggle');
+        const panelContent = document.getElementById('panel-content');
 
         // --- Three.js Setup ---
         const scene = new THREE.Scene();
@@ -289,6 +304,7 @@
         particleGeometry.setAttribute('aTarget', new THREE.BufferAttribute(targets, 3));
         particleGeometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
 
+        // SHADER UPDATE UNTUK EFEK WAH (LEDAKAN DRAMATIS)
         const particleMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 uTime: { value: 0 },
@@ -309,20 +325,32 @@
                 attribute vec3 aRandom;
 
                 varying float vAlpha;
+                varying float vDispersion; // Kirim nilai dispersi ke fragment shader
 
                 void main() {
+                    vDispersion = uDispersion;
                     vec3 morphedPos = mix(position, aTarget, uTransition);
 
+                    // Gerak mengambang pelan saat normal
                     morphedPos.x += sin(uTime * 0.5 + morphedPos.y * 0.5) * 0.2 * uScale;
                     morphedPos.y += cos(uTime * 0.4 + morphedPos.z * 0.5) * 0.2 * uScale;
 
-                    vec3 finalPos = morphedPos * uScale + (aRandom * uDispersion);
+                    // Gerak Turbulensi/Chaos saat meledak (semakin besar dispersi, semakin liar)
+                    vec3 chaos = vec3(
+                        sin(uTime * 5.0 + aRandom.x * 20.0),
+                        cos(uTime * 4.0 + aRandom.y * 20.0),
+                        sin(uTime * 6.0 + aRandom.z * 20.0)
+                    ) * (uDispersion * 0.15);
+
+                    vec3 finalPos = morphedPos * uScale + (aRandom * uDispersion) + chaos;
 
                     vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
                     
-                    gl_PointSize = (12.0 * uPixelRatio) / -mvPosition.z;
+                    // Efek "Wah": Partikel membesar drastis jadi percikan terang saat meledak
+                    gl_PointSize = ((12.0 + uDispersion * 1.5) * uPixelRatio) / -mvPosition.z;
                     
-                    vAlpha = clamp(1.0 - (uDispersion * 0.05), 0.1, 1.0);
+                    // Jaga alpha agar tetap terlihat saat meledak jauh
+                    vAlpha = clamp(1.0 - (uDispersion * 0.02), 0.2, 1.0);
 
                     gl_Position = projectionMatrix * mvPosition;
                 }
@@ -330,6 +358,7 @@
             fragmentShader: `
                 uniform vec3 uColor;
                 varying float vAlpha;
+                varying float vDispersion;
 
                 void main() {
                     vec2 coord = gl_PointCoord - vec2(0.5);
@@ -339,7 +368,12 @@
                     
                     float intensity = pow(1.0 - (dist * 2.0), 1.5);
                     
-                    gl_FragColor = vec4(uColor, intensity * vAlpha);
+                    // Efek Kilatan (Flash): Berubah putih menyilaukan saat terpental jauh
+                    float flash = min(vDispersion / 15.0, 0.8);
+                    vec3 wowColor = mix(uColor, vec3(1.0, 1.0, 1.0), flash);
+                    
+                    // Tambahkan glow ekstra saat flash tinggi
+                    gl_FragColor = vec4(wowColor, intensity * vAlpha + (flash * 0.5));
                 }
             `,
             transparent: true,
@@ -376,27 +410,41 @@
 
         function calculateHandOpenness(landmarks) {
             const wrist = landmarks[0];
-            const middleMCP = landmarks[9]; 
             
-            const handSize = Math.sqrt(Math.pow(wrist.x - middleMCP.x, 2) + Math.pow(wrist.y - middleMCP.y, 2) + Math.pow(wrist.z - middleMCP.z, 2));
-            
-            if (handSize === 0) return 1.0;
+            // Metode baru: Bandingkan jarak ujung jari ke pergelangan vs pangkal jari ke pergelangan
+            // Jauh lebih responsif dan akurat untuk deteksi "mengepal vs buka"
+            const fingers = [
+                { tip: 8, mcp: 5 },   // Telunjuk
+                { tip: 12, mcp: 9 },  // Tengah
+                { tip: 16, mcp: 13 }, // Manis
+                { tip: 20, mcp: 17 }  // Kelingking
+            ];
 
-            const tips = [4, 8, 12, 16, 20];
-            let tipSumDist = 0;
+            let totalRatio = 0;
             
-            for(let i=1; i<tips.length; i++) { 
-                const tip = landmarks[tips[i]];
-                tipSumDist += Math.sqrt(Math.pow(wrist.x - tip.x, 2) + Math.pow(wrist.y - tip.y, 2) + Math.pow(wrist.z - tip.z, 2));
+            for(let i=0; i<fingers.length; i++) { 
+                const tip = landmarks[fingers[i].tip];
+                const mcp = landmarks[fingers[i].mcp];
+                
+                const tipDist = Math.hypot(wrist.x - tip.x, wrist.y - tip.y, wrist.z - tip.z);
+                const mcpDist = Math.hypot(wrist.x - mcp.x, wrist.y - mcp.y, wrist.z - mcp.z);
+                
+                if (mcpDist > 0) {
+                    totalRatio += (tipDist / mcpDist);
+                }
             }
             
-            const avgNormalizedTipDist = (tipSumDist / 4.0) / handSize;
+            const avgRatio = totalRatio / 4.0;
 
-            const minRatio = 1.1;
-            const maxRatio = 2.4;
+            // Batas rasio: Disesuaikan agar lebih mudah mencapai bentuk sempurna (Openness 1.0)
+            const minRatio = 1.2; // Batas mengepal meledak
+            const maxRatio = 1.8; // DITURUNKAN dari 2.1 agar buka tangan santai sudah bentuk sempurna
             
-            let openness = (avgNormalizedTipDist - minRatio) / (maxRatio - minRatio);
-            return Math.max(0.0, Math.min(1.0, openness));
+            let openness = (avgRatio - minRatio) / (maxRatio - minRatio);
+            openness = Math.max(0.0, Math.min(1.0, openness));
+            
+            // Kurva Smoothstep agar tangkapan di ujung (kepal/buka) lebih tegas dan tidak bergetar
+            return openness * openness * (3 - 2 * openness);
         }
 
         // --- MediaPipe Initialization ---
@@ -519,6 +567,27 @@
         }
 
         // --- Event Listeners ---
+        
+        // Logika Dropdown Panel
+        btnTogglePanel.addEventListener('click', () => {
+            // Animasi melipat dan memunculkan dengan menggunakan class Tailwind
+            panelContent.classList.toggle('max-h-0');
+            panelContent.classList.toggle('max-h-[500px]');
+            panelContent.classList.toggle('opacity-0');
+            panelContent.classList.toggle('opacity-100');
+            panelContent.classList.toggle('mt-4');
+            
+            // Animasi rotasi panah
+            iconToggle.classList.toggle('rotate-180');
+            
+            // Ubah tooltip
+            if (panelContent.classList.contains('max-h-0')) {
+                btnTogglePanel.title = "Tampilkan Panel";
+            } else {
+                btnTogglePanel.title = "Sembunyikan Panel";
+            }
+        });
+
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -537,6 +606,7 @@
             AppState.baseColor.set(hex);
             particleMaterial.uniforms.uColor.value = AppState.baseColor;
             
+            // Reset bloom saat warna ganti biar nggak nyangkut
             bloomPass.strength = 1.2;
         });
 
@@ -580,21 +650,28 @@
                 particleMaterial.uniforms.uTransition.value = AppState.transitionProgress;
             }
 
-            AppState.gestureOpenness += (AppState.targetGestureOpenness - AppState.gestureOpenness) * 0.15;
+            // Responsivitas tangan
+            AppState.gestureOpenness += (AppState.targetGestureOpenness - AppState.gestureOpenness) * 0.35;
             
             const scale = 0.1 + (AppState.gestureOpenness * 0.9);
-            const dispersion = (1.0 - AppState.gestureOpenness) * 15.0;
+            
+            // TINGKATKAN JARAK LEDAKAN (DARI 15.0 KE 25.0) biar mencar banget
+            const dispersion = (1.0 - AppState.gestureOpenness) * 25.0;
 
             particleMaterial.uniforms.uScale.value = scale;
             particleMaterial.uniforms.uDispersion.value = dispersion;
+
+            // EFEK BLOOM DINAMIS (Bikin layar ikut memancarkan cahaya silau pas meledak)
+            bloomPass.strength = 1.2 + (dispersion * 0.1);
 
             gestureBar.style.width = `${Math.max(5, AppState.gestureOpenness * 100)}%`;
             if (AppState.gestureOpenness > 0.8) gestureBar.className = "bg-green-400 h-full transition-all duration-75";
             else if (AppState.gestureOpenness < 0.3) gestureBar.className = "bg-red-400 h-full transition-all duration-75";
             else gestureBar.className = "bg-yellow-400 h-full transition-all duration-75";
 
-            particleSystem.rotation.y += delta * (0.1 + dispersion * 0.05);
-            particleSystem.rotation.z += delta * (0.05 + dispersion * 0.02);
+            // VORTEX SPIN: Pas meledak (dispersi naik), rotasinya berputar sangat kencang
+            particleSystem.rotation.y += delta * (0.1 + dispersion * 0.2);
+            particleSystem.rotation.z += delta * (0.05 + dispersion * 0.1);
 
             composer.render();
         }
