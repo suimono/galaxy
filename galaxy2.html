@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <!-- Meta viewport dioptimalkan untuk Android/Mobile agar tidak bisa di-zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Partikel Gestur 3D</title>
+    
+    <!-- Tailwind CSS for minimalist UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MediaPipe dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <!-- Three.js Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/"
+            }
+        }
+    </script>
+
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #050505; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #ui-layer { position: absolute; z-index: 10; pointer-events: none; }
+        .pointer-events-auto { pointer-events: auto; }
+        
+        /* Glassmorphism styling */
+        .glass-panel {
+            background: rgba(20, 20, 25, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Video PIP (Diperkecil untuk Mobile) */
+        #video-pip {
+            transform: scaleX(-1); /* Mirror video */
+            border-radius: 0.5rem;
+            width: 100px;
+            height: 75px;
+            object-fit: cover;
+            background-color: #000;
+        }
+        #output-canvas {
+            transform: scaleX(-1);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100px; height: 75px;
+            border-radius: 0.5rem;
+        }
+
+        /* Custom Scrollbar for dropdowns */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        
+        /* Area aman untuk navigasi bawah Android */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+    </style>
+</head>
+<body class="text-white">
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Layer -->
+    <div id="ui-layer" class="w-full h-full flex flex-col justify-between pb-safe">
+        
+        <!-- Bagian Atas: PIP Kamera -->
+        <div class="flex justify-end items-start p-4 pointer-events-none">
+            <!-- Picture-in-Picture Tracking Display -->
+            <div class="glass-panel p-2 rounded-xl pointer-events-auto shadow-xl relative" id="pip-container" style="display: none;">
+                <!-- DITAMBAHKAN MUTED agar bisa autoplay di mobile -->
+                <video id="input-video" class="hidden" autoplay playsinline muted></video>
+                <div class="relative w-[100px] h-[75px]">
+                    <video id="video-pip" autoplay playsinline muted></video>
+                    <canvas id="output-canvas"></canvas>
+                </div>
+                <div class="mt-1 text-center text-[10px] font-mono text-blue-300 leading-tight" id="tracking-status">Pelacakan Aktif</div>
+                <div class="w-full bg-gray-700 h-1 mt-1 rounded overflow-hidden">
+                    <div id="gesture-bar" class="bg-blue-400 h-full w-full transition-all duration-75"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bagian Bawah: Instruksi & Panel Kontrol (Bottom Sheet) -->
+        <div class="flex flex-col w-full pointer-events-none">
+            
+            <!-- Instructions -->
+            <div class="text-center mb-3 px-4">
+                <div class="inline-block glass-panel px-4 py-2 rounded-full shadow-lg">
+                    <p class="text-[11px] sm:text-sm text-gray-200">
+                        <span class="font-bold text-white">Buka Tangan:</span> Membentuk Pola &nbsp;|&nbsp; 
+                        <span class="font-bold text-white">Mengepal:</span> Menyebar
+                    </p>
+                </div>
+            </div>
+
+            <!-- Controls Panel (Model Android Bottom Sheet) -->
+            <div class="glass-panel p-5 rounded-t-3xl sm:rounded-2xl sm:mx-auto sm:mb-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col gap-4 w-full sm:w-80 transition-all duration-300 border-b-0 sm:border-b">
+                
+                <!-- Header Panel -->
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-light tracking-wide text-white mb-0.5">KINETIC<span class="font-bold text-blue-400">DUST</span></h1>
+                        <p class="text-[10px] text-gray-400">Partikel Interaktif Gestur</p>
+                    </div>
+                    <button id="btn-fullscreen" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors" title="Layar Penuh">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Pattern Selection -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Pola Partikel</label>
+                        <select id="pattern-select" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors appearance-none">
+                            <option value="galaxy" class="bg-gray-900">Galaksi Spiral</option>
+                            <option value="sphere" class="bg-gray-900">Bola Kuantum</option>
+                            <option value="torus" class="bg-gray-900">Torus Magnetik</option>
+                            <option value="dna" class="bg-gray-900">Heliks DNA</option>
+                            <option value="cube" class="bg-gray-900">Inti Tesseract</option>
+                        </select>
+                    </div>
+
+                    <!-- Color Picker -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Warna Utama</label>
+                        <div class="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl p-2">
+                            <input type="color" id="color-picker" value="#00d2ff" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0 p-0 shadow-sm outline-none">
+                            <span class="text-sm font-mono text-gray-300 uppercase" id="color-value">#00d2ff</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Controls -->
+                <button id="btn-camera" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    Mulai Kamera
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- Application State ---
+        const AppState = {
+            particleCount: 60000,
+            baseColor: new THREE.Color('#00d2ff'),
+            currentPattern: 'galaxy',
+            gestureOpenness: 1.0,      
+            targetGestureOpenness: 1.0, 
+            isTransitioning: false,
+            transitionProgress: 1.0,
+            cameraActive: false
+        };
+
+        // --- DOM Elements ---
+        const container = document.getElementById('canvas-container');
+        const patternSelect = document.getElementById('pattern-select');
+        const colorPicker = document.getElementById('color-picker');
+        const colorValue = document.getElementById('color-value');
+        const btnCamera = document.getElementById('btn-camera');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+        const pipContainer = document.getElementById('pip-container');
+        const videoElementPip = document.getElementById('video-pip');
+        const videoElementHidden = document.getElementById('input-video');
+        const canvasElement = document.getElementById('output-canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const gestureBar = document.getElementById('gesture-bar');
+        const trackingStatus = document.getElementById('tracking-status');
+
+        // --- Three.js Setup ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050505, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 15;
+        camera.position.y = 2;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.enablePan = false;
+        controls.enableZoom = true; // Izinkan zoom dengan pinch di mobile
+
+        // --- Post Processing (Bloom) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.2;
+        bloomPass.radius = 0.5;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- Particle Generation Algorithms ---
+        const Patterns = {
+            sphere: (index, total) => {
+                const phi = Math.acos(-1 + (2 * index) / total);
+                const theta = Math.sqrt(total * Math.PI) * phi;
+                const r = 5 + (Math.random() * 0.2);
+                return new THREE.Vector3(r * Math.cos(theta) * Math.sin(phi), r * Math.sin(theta) * Math.sin(phi), r * Math.cos(phi));
+            },
+            cube: (index, total) => {
+                const s = 8;
+                return new THREE.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+            },
+            torus: (index, total) => {
+                const u = Math.random() * Math.PI * 2;
+                const v = Math.random() * Math.PI * 2;
+                const R = 4;
+                const r = 1.5 + (Math.random() * 0.5 - 0.25);
+                return new THREE.Vector3((R + r * Math.cos(v)) * Math.cos(u), r * Math.sin(v), (R + r * Math.cos(v)) * Math.sin(u));
+            },
+            galaxy: (index, total) => {
+                const arms = 4;
+                const r = Math.random() * 8;
+                const a = Math.random() * Math.PI * 2;
+                const armAngle = (Math.floor(Math.random() * arms) / arms) * Math.PI * 2;
+                const spin = r * 0.5;
+                const finalAngle = armAngle + spin + (Math.random() * 0.5 - 0.25);
+                return new THREE.Vector3(Math.cos(finalAngle) * r, (Math.random() - 0.5) * (1.0 - r/8) * 2.0, Math.sin(finalAngle) * r);
+            },
+            dna: (index, total) => {
+                const height = 15;
+                const y = (Math.random() - 0.5) * height;
+                const phase = y * 1.0;
+                const strand = Math.random() > 0.5 ? 0 : Math.PI;
+                const r = 2.5 + (Math.random() * 0.2);
+                
+                if (Math.random() > 0.9) {
+                    const rBridge = Math.random() * 2.5;
+                    const bridgeStrand = Math.random() > 0.5 ? 0 : Math.PI;
+                    return new THREE.Vector3(Math.cos(phase + bridgeStrand) * rBridge, y, Math.sin(phase + bridgeStrand) * rBridge);
+                }
+                
+                return new THREE.Vector3(Math.cos(phase + strand) * r, y, Math.sin(phase + strand) * r);
+            }
+        };
+
+        // --- Particle System Initialization ---
+        let particleGeometry = new THREE.BufferGeometry();
+        let positions = new Float32Array(AppState.particleCount * 3);
+        let targets = new Float32Array(AppState.particleCount * 3);
+        let randoms = new Float32Array(AppState.particleCount * 3);
+
+        for (let i = 0; i < AppState.particleCount; i++) {
+            const pt = Patterns[AppState.currentPattern](i, AppState.particleCount);
+            
+            positions[i * 3] = pt.x;
+            positions[i * 3 + 1] = pt.y;
+            positions[i * 3 + 2] = pt.z;
+            
+            targets[i * 3] = pt.x;
+            targets[i * 3 + 1] = pt.y;
+            targets[i * 3 + 2] = pt.z;
+            
+            const u = Math.random() * Math.PI * 2;
+            const v = Math.acos(2 * Math.random() - 1);
+            randoms[i * 3] = Math.sin(v) * Math.cos(u);
+            randoms[i * 3 + 1] = Math.sin(v) * Math.sin(u);
+            randoms[i * 3 + 2] = Math.cos(v);
+        }
+
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeometry.setAttribute('aTarget', new THREE.BufferAttribute(targets, 3));
+        particleGeometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
+
+        const particleMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uColor: { value: AppState.baseColor },
+                uScale: { value: 1.0 },       
+                uDispersion: { value: 0.0 },  
+                uTransition: { value: 1.0 },  
+                uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+            },
+            vertexShader: `
+                uniform float uTime;
+                uniform float uScale;
+                uniform float uDispersion;
+                uniform float uTransition;
+                uniform float uPixelRatio;
+
+                attribute vec3 aTarget;
+                attribute vec3 aRandom;
+
+                varying float vAlpha;
+
+                void main() {
+                    vec3 morphedPos = mix(position, aTarget, uTransition);
+
+                    morphedPos.x += sin(uTime * 0.5 + morphedPos.y * 0.5) * 0.2 * uScale;
+                    morphedPos.y += cos(uTime * 0.4 + morphedPos.z * 0.5) * 0.2 * uScale;
+
+                    vec3 finalPos = morphedPos * uScale + (aRandom * uDispersion);
+
+                    vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
+                    
+                    gl_PointSize = (12.0 * uPixelRatio) / -mvPosition.z;
+                    
+                    vAlpha = clamp(1.0 - (uDispersion * 0.05), 0.1, 1.0);
+
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 uColor;
+                varying float vAlpha;
+
+                void main() {
+                    vec2 coord = gl_PointCoord - vec2(0.5);
+                    float dist = length(coord);
+                    
+                    if (dist > 0.5) discard;
+                    
+                    float intensity = pow(1.0 - (dist * 2.0), 1.5);
+                    
+                    gl_FragColor = vec4(uColor, intensity * vAlpha);
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particleSystem);
+
+        // --- Functions ---
+
+        function changePattern(newPatternName) {
+            AppState.currentPattern = newPatternName;
+            AppState.isTransitioning = true;
+            AppState.transitionProgress = 0.0;
+            particleMaterial.uniforms.uTransition.value = 0.0;
+
+            const posAttr = particleGeometry.attributes.position;
+            const targetAttr = particleGeometry.attributes.aTarget;
+
+            for (let i = 0; i < posAttr.count; i++) {
+                posAttr.setXYZ(i, targetAttr.getX(i), targetAttr.getY(i), targetAttr.getZ(i));
+            }
+
+            for (let i = 0; i < AppState.particleCount; i++) {
+                const pt = Patterns[AppState.currentPattern](i, AppState.particleCount);
+                targetAttr.setXYZ(i, pt.x, pt.y, pt.z);
+            }
+
+            posAttr.needsUpdate = true;
+            targetAttr.needsUpdate = true;
+        }
+
+        function calculateHandOpenness(landmarks) {
+            const wrist = landmarks[0];
+            const middleMCP = landmarks[9]; 
+            
+            const handSize = Math.sqrt(Math.pow(wrist.x - middleMCP.x, 2) + Math.pow(wrist.y - middleMCP.y, 2) + Math.pow(wrist.z - middleMCP.z, 2));
+            
+            if (handSize === 0) return 1.0;
+
+            const tips = [4, 8, 12, 16, 20];
+            let tipSumDist = 0;
+            
+            for(let i=1; i<tips.length; i++) { 
+                const tip = landmarks[tips[i]];
+                tipSumDist += Math.sqrt(Math.pow(wrist.x - tip.x, 2) + Math.pow(wrist.y - tip.y, 2) + Math.pow(wrist.z - tip.z, 2));
+            }
+            
+            const avgNormalizedTipDist = (tipSumDist / 4.0) / handSize;
+
+            const minRatio = 1.1;
+            const maxRatio = 2.4;
+            
+            let openness = (avgNormalizedTipDist - minRatio) / (maxRatio - minRatio);
+            return Math.max(0.0, Math.min(1.0, openness));
+        }
+
+        // --- MediaPipe Initialization ---
+        let hands;
+        let cameraMP;
+
+        async function initCamera() {
+            if (AppState.cameraActive) return;
+            
+            // Cek apakah konteks aman (HTTPS atau localhost)
+            if (window.isSecureContext === false) {
+                btnCamera.innerHTML = `Butuh HTTPS / Host Lokal`;
+                btnCamera.classList.add('bg-red-600', 'shadow-red-500/30');
+                
+                pipContainer.style.display = 'block';
+                document.getElementById('video-pip').style.display = 'none';
+                trackingStatus.innerText = "Browser memblokir kamera karena tidak menggunakan HTTPS (Penyimpanan Lokal / file://).";
+                trackingStatus.className = "mt-2 text-center text-[10px] font-mono text-red-500 leading-tight";
+                return;
+            }
+
+            btnCamera.innerHTML = `<svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memuat Model...`;
+            btnCamera.disabled = true;
+
+            try {
+                hands = new window.Hands({locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }});
+
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.6,
+                    minTrackingConfidence: 0.6
+                });
+
+                hands.onResults(onHandResults);
+
+                // Gunakan constraint 'ideal' agar lebih toleran pada berbagai kamera HP
+                const constraints = { 
+                    video: { 
+                        width: { ideal: 320 }, 
+                        height: { ideal: 240 }, 
+                        facingMode: "user" 
+                    } 
+                };
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                .then((stream) => {
+                    videoElementHidden.srcObject = stream;
+                    videoElementPip.srcObject = stream;
+                    
+                    cameraMP = new window.Camera(videoElementHidden, {
+                        onFrame: async () => {
+                            await hands.send({image: videoElementHidden});
+                        },
+                        width: 320,
+                        height: 240
+                    });
+                    
+                    cameraMP.start();
+                    
+                    AppState.cameraActive = true;
+                    btnCamera.disabled = false;
+                    pipContainer.style.display = 'block';
+                    btnCamera.innerHTML = `Kamera Aktif`;
+                    btnCamera.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'shadow-blue-500/30');
+                    btnCamera.classList.add('bg-green-600', 'hover:bg-green-500', 'shadow-green-500/30');
+                })
+                .catch(err => {
+                    console.error("Akses kamera ditolak/gagal:", err);
+                    
+                    // Deteksi penyebab error spesifik
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        btnCamera.innerHTML = `Izin Ditolak`;
+                        trackingStatus.innerText = "Izin kamera ditolak. Silakan izinkan di pengaturan browser.";
+                    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                        btnCamera.innerHTML = `Kamera Tidak Ditemukan`;
+                        trackingStatus.innerText = "Tidak ada kamera yang terdeteksi di perangkat Anda.";
+                    } else {
+                        btnCamera.innerHTML = `Kamera Eror`;
+                        trackingStatus.innerText = err.message || "Gagal menyalakan kamera.";
+                    }
+                    
+                    btnCamera.disabled = false;
+                    btnCamera.classList.add('bg-red-600', 'shadow-red-500/30');
+                    pipContainer.style.display = 'block';
+                    document.getElementById('video-pip').style.display = 'none';
+                    trackingStatus.className = "mt-2 text-center text-[10px] font-mono text-red-500 leading-tight";
+                });
+
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function onHandResults(results) {
+            canvasElement.width = videoElementPip.videoWidth || 100;
+            canvasElement.height = videoElementPip.videoHeight || 75;
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                trackingStatus.innerText = "Pelacakan Aktif";
+                trackingStatus.className = "mt-1 text-center text-[10px] font-mono text-green-400 leading-tight";
+                
+                const landmarks = results.multiHandLandmarks[0];
+                
+                window.drawConnectors(canvasCtx, landmarks, window.HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 1.5});
+                window.drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 0.5, radius: 1.5});
+                
+                AppState.targetGestureOpenness = calculateHandOpenness(landmarks);
+            } else {
+                trackingStatus.innerText = "Tangan Tidak Terdeteksi";
+                trackingStatus.className = "mt-1 text-center text-[10px] font-mono text-yellow-500 leading-tight";
+                
+                AppState.targetGestureOpenness = 1.0; 
+            }
+            canvasCtx.restore();
+        }
+
+        // --- Event Listeners ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+            particleMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
+        });
+
+        patternSelect.addEventListener('change', (e) => {
+            changePattern(e.target.value);
+        });
+
+        colorPicker.addEventListener('input', (e) => {
+            const hex = e.target.value;
+            colorValue.innerText = hex;
+            AppState.baseColor.set(hex);
+            particleMaterial.uniforms.uColor.value = AppState.baseColor;
+            
+            bloomPass.strength = 1.2;
+        });
+
+        btnCamera.addEventListener('click', initCamera);
+
+        btnFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Gagal masuk mode layar penuh: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // --- Auto Start Kamera ---
+        window.addEventListener('load', () => {
+            // Coba nyalakan kamera secara otomatis saat halaman selesai dimuat
+            initCamera();
+        });
+
+        // --- Animation Loop ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            controls.update();
+
+            particleMaterial.uniforms.uTime.value = time;
+
+            if (AppState.isTransitioning) {
+                AppState.transitionProgress += delta * 1.5; 
+                if (AppState.transitionProgress >= 1.0) {
+                    AppState.transitionProgress = 1.0;
+                    AppState.isTransitioning = false;
+                }
+                particleMaterial.uniforms.uTransition.value = AppState.transitionProgress;
+            }
+
+            AppState.gestureOpenness += (AppState.targetGestureOpenness - AppState.gestureOpenness) * 0.15;
+            
+            const scale = 0.1 + (AppState.gestureOpenness * 0.9);
+            const dispersion = (1.0 - AppState.gestureOpenness) * 15.0;
+
+            particleMaterial.uniforms.uScale.value = scale;
+            particleMaterial.uniforms.uDispersion.value = dispersion;
+
+            gestureBar.style.width = `${Math.max(5, AppState.gestureOpenness * 100)}%`;
+            if (AppState.gestureOpenness > 0.8) gestureBar.className = "bg-green-400 h-full transition-all duration-75";
+            else if (AppState.gestureOpenness < 0.3) gestureBar.className = "bg-red-400 h-full transition-all duration-75";
+            else gestureBar.className = "bg-yellow-400 h-full transition-all duration-75";
+
+            particleSystem.rotation.y += delta * (0.1 + dispersion * 0.05);
+            particleSystem.rotation.z += delta * (0.05 + dispersion * 0.02);
+
+            composer.render();
+        }
+
+        animate();
+
+    </script>
+</body>
+</html>
