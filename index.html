@@ -2,7 +2,6 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <!-- Meta viewport dioptimalkan untuk Android/Mobile -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Partikel Gestur 3D</title>
     
@@ -79,9 +78,9 @@
                     <video id="video-pip" autoplay playsinline muted></video>
                     <canvas id="output-canvas"></canvas>
                 </div>
-                <div class="mt-1 text-center text-[10px] font-mono text-blue-300 leading-tight" id="tracking-status">Pelacakan Aktif</div>
+                <div class="mt-1 text-center text-[10px] font-mono text-blue-300 leading-tight" id="tracking-status">Menunggu Tangan</div>
                 <div class="w-full bg-gray-700 h-1 mt-1 rounded overflow-hidden">
-                    <div id="gesture-bar" class="bg-blue-400 h-full w-full transition-all duration-75"></div>
+                    <div id="gesture-bar" class="bg-blue-400 h-full w-0 transition-all duration-75"></div>
                 </div>
             </div>
         </div>
@@ -91,10 +90,11 @@
             
             <!-- Instructions -->
             <div class="text-center mb-3 px-4">
-                <div class="inline-block glass-panel px-4 py-2 rounded-full shadow-lg">
+                <div class="inline-block glass-panel px-4 py-2 rounded-full shadow-lg border border-blue-500/30">
                     <p class="text-[11px] sm:text-sm text-gray-200">
-                        <span class="font-bold text-white">Buka Tangan:</span> Teks Mengikuti &nbsp;|&nbsp; 
-                        <span class="font-bold text-white">Mengepal:</span> Partikel Tangan
+                        <span class="font-bold text-white">Kosong:</span> Tabrakan Planet &nbsp;|&nbsp; 
+                        <span class="font-bold text-white">Buka:</span> Tangan &nbsp;|&nbsp; 
+                        <span class="font-bold text-white">Kepal:</span> Pola (Meledak)
                     </p>
                 </div>
             </div>
@@ -104,7 +104,7 @@
                 
                 <div class="flex justify-between items-center w-full">
                     <div>
-                        <p class="text-[10px] text-gray-400">Sistem Partikel 3D</p>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Menu Kustomisasi</p>
                     </div>
                     <div class="flex gap-2">
                         <button id="btn-toggle-panel" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors" title="Sembunyikan Panel">
@@ -118,16 +118,16 @@
                         
                         <!-- Input Teks Kustom -->
                         <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Teks Kustom</label>
+                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Teks Kustom (Pola Dasar)</label>
                             <div class="flex gap-2">
-                                <input type="text" id="custom-text-input" value="HALO" maxlength="12" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 outline-none transition-colors" placeholder="Ketik disini...">
+                                <input type="text" id="custom-text-input" value="" maxlength="12" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 outline-none transition-colors" placeholder="Ketik disini...">
                                 <button id="btn-apply-text" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors">Terapkan</button>
                             </div>
                         </div>
 
                         <!-- Pattern Selection -->
                         <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Pola Partikel</label>
+                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Pilih Pola Dasar</label>
                             <select id="pattern-select" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors appearance-none">
                                 <option value="text" class="bg-gray-900">Teks Kustom (Default)</option>
                                 <option value="galaxy" class="bg-gray-900">Galaksi Spiral</option>
@@ -138,7 +138,7 @@
 
                         <!-- Color Picker -->
                         <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Warna Utama</label>
+                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Warna Energi Utama</label>
                             <div class="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl p-2">
                                 <input type="color" id="color-picker" value="#00d2ff" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0 p-0 shadow-sm outline-none">
                                 <span class="text-sm font-mono text-gray-300 uppercase" id="color-value">#00d2ff</span>
@@ -164,22 +164,33 @@
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-        // --- Application State ---
         const AppState = {
             particleCount: 60000,
             baseColor: new THREE.Color('#00d2ff'),
             currentPattern: 'text',
+            
+            // Variabel deteksi
+            isHandDetected: false, 
+            
+            // 3 State Beban Transisi (0.0 -> 1.0)
+            weightAmbient: 1.0,
+            weightHand: 0.0,
+            weightPattern: 0.0,
+            
             gestureOpenness: 1.0,      
             targetGestureOpenness: 1.0, 
-            targetHandPosition: new THREE.Vector3(0, 0, 0),    // Menambahkan target posisi tangan
-            currentHandPosition: new THREE.Vector3(0, 0, 0),   // Menambahkan posisi tangan untuk lerp mulus
+            isGripped: false,
+            gripBlast: 0.0, // Untuk animasi ledakan partikel saat mengepal
+            
+            targetHandPosition: new THREE.Vector3(0, 0, 0),    
+            currentHandPosition: new THREE.Vector3(0, 0, 0),   
             isTransitioning: false,
             transitionProgress: 1.0,
             cameraActive: false,
-            textPoints: [] // Array untuk menyimpan koordinat 3D teks
+            textPoints: [] 
         };
 
-        // --- DOM Elements ---
+        // DOM Elements
         const container = document.getElementById('canvas-container');
         const patternSelect = document.getElementById('pattern-select');
         const colorPicker = document.getElementById('color-picker');
@@ -196,11 +207,10 @@
         const iconToggle = document.getElementById('icon-toggle');
         const panelContent = document.getElementById('panel-content');
         
-        // Elemen Teks
         const textInput = document.getElementById('custom-text-input');
         const btnApplyText = document.getElementById('btn-apply-text');
 
-        // --- Three.js Setup ---
+        // Three.js Setup
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x050505, 0.002);
 
@@ -217,7 +227,6 @@
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
 
-        // --- Post Processing (Bloom) ---
         const renderScene = new RenderPass(scene, camera);
         const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
         bloomPass.threshold = 0.1;
@@ -228,7 +237,7 @@
         composer.addPass(renderScene);
         composer.addPass(bloomPass);
 
-        // --- Background Bintang Latar ---
+        // Latar Bintang
         const starsGeom = new THREE.BufferGeometry();
         const starsMat = new THREE.PointsMaterial({color: 0x88aaff, size: 0.05, transparent: true, opacity: 0.4});
         const starsPts = [];
@@ -239,18 +248,14 @@
         const starField = new THREE.Points(starsGeom, starsMat);
         scene.add(starField);
 
-        // --- Fungsi Generator Teks ke Titik 3D ---
         function generateTextPoints(text) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            canvas.width = 512;
-            canvas.height = 256;
+            canvas.width = 512; canvas.height = 256;
 
-            // Latar hitam
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Setup teks
             ctx.font = 'bold 100px "Segoe UI", Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -261,36 +266,26 @@
             const data = imageData.data;
             const points = [];
 
-            // Membaca pixel dan mengubah ke koordinat 3D
             for (let y = 0; y < canvas.height; y += 3) {
                 for (let x = 0; x < canvas.width; x += 3) {
                     const index = (y * canvas.width + x) * 4;
-                    // Jika pixel berwarna (putih)
                     if (data[index] > 128) {
-                        // Mapping ke koordinat Three.js (Tengah di 0,0)
                         const pX = (x - canvas.width / 2) * 0.05;
                         const pY = -(y - canvas.height / 2) * 0.05;
-                        // Tambahkan sedikit noise z untuk kedalaman
                         const pZ = (Math.random() - 0.5) * 0.5;
                         points.push(new THREE.Vector3(pX, pY, pZ));
                     }
                 }
             }
-            
-            // Fallback jika tidak ada titik
             if (points.length === 0) points.push(new THREE.Vector3(0,0,0));
             return points;
         }
 
-        // Generate teks awal
         AppState.textPoints = generateTextPoints(textInput.value);
 
-        // --- Particle Generation Algorithms ---
         const Patterns = {
             text: (index, total) => {
-                // Mengambil titik teks secara berulang jika partikel lebih banyak dari titik teks
                 const pt = AppState.textPoints[index % AppState.textPoints.length];
-                // Tambahkan sedikit noise acak agar tidak terlalu kaku
                 return new THREE.Vector3(pt.x + (Math.random()-0.5)*0.1, pt.y + (Math.random()-0.5)*0.1, pt.z);
             },
             sphere: (index, total) => {
@@ -323,27 +318,22 @@
             }
         };
 
-        // --- Particle System Initialization ---
         let particleGeometry = new THREE.BufferGeometry();
         let positions = new Float32Array(AppState.particleCount * 3);
         let targets = new Float32Array(AppState.particleCount * 3);
         let randoms = new Float32Array(AppState.particleCount * 3);
 
-        // --- Tambahan untuk Pola Tangan ---
         let handPositions = new Float32Array(AppState.particleCount * 3);
+        let ambientPositions = new Float32Array(AppState.particleCount * 3); // Untuk posisi melayang bebas
+        const planetIDs = new Float32Array(AppState.particleCount); // ID Planet untuk tabrakan
         const assignedBone = new Uint8Array(AppState.particleCount);
         const boneLerp = new Float32Array(AppState.particleCount);
 
         for (let i = 0; i < AppState.particleCount; i++) {
             const pt = Patterns[AppState.currentPattern](i, AppState.particleCount);
             
-            positions[i * 3] = pt.x;
-            positions[i * 3 + 1] = pt.y;
-            positions[i * 3 + 2] = pt.z;
-            
-            targets[i * 3] = pt.x;
-            targets[i * 3 + 1] = pt.y;
-            targets[i * 3 + 2] = pt.z;
+            positions[i * 3] = pt.x; positions[i * 3 + 1] = pt.y; positions[i * 3 + 2] = pt.z;
+            targets[i * 3] = pt.x; targets[i * 3 + 1] = pt.y; targets[i * 3 + 2] = pt.z;
             
             const u = Math.random() * Math.PI * 2;
             const v = Math.acos(2 * Math.random() - 1);
@@ -351,7 +341,35 @@
             randoms[i * 3 + 1] = Math.sin(v) * Math.sin(u);
             randoms[i * 3 + 2] = Math.cos(v);
 
-            // Assign ke tulang tangan secara acak (ada 21 garis tulang di tangan)
+            // Sebar partikel untuk mode "Kosong" (Dibuat 2 Planet yang bertabrakan)
+            const isPlanet1 = i % 2 === 0;
+            planetIDs[i] = isPlanet1 ? -1.0 : 1.0;
+
+            let rA, thetaA, phiA;
+            const randObj = Math.random();
+            
+            if (randObj > 0.4) {
+                // Inti planet padat (Sphere)
+                rA = 3.5 * Math.cbrt(Math.random()); 
+                thetaA = Math.random() * 2 * Math.PI;
+                phiA = Math.acos(2 * Math.random() - 1);
+            } else if (randObj > 0.1) {
+                // Cincin / Sabuk Asteroid
+                rA = 5 + Math.random() * 7;
+                thetaA = Math.random() * 2 * Math.PI;
+                phiA = (Math.PI / 2) + (Math.random() - 0.5) * 0.2;
+            } else {
+                // Debu bintang luas
+                rA = 12 * Math.random();
+                thetaA = Math.random() * 2 * Math.PI;
+                phiA = Math.acos(2 * Math.random() - 1);
+            }
+
+            // Posisi lokal partikel relatif terhadap inti planetnya
+            ambientPositions[i * 3] = rA * Math.sin(phiA) * Math.cos(thetaA);
+            ambientPositions[i * 3 + 1] = rA * Math.cos(phiA);
+            ambientPositions[i * 3 + 2] = rA * Math.sin(phiA) * Math.sin(thetaA);
+
             assignedBone[i] = Math.floor(Math.random() * 21);
             boneLerp[i] = Math.random();
         }
@@ -359,53 +377,99 @@
         particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         particleGeometry.setAttribute('aTarget', new THREE.BufferAttribute(targets, 3));
         particleGeometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
-        particleGeometry.setAttribute('aHandPos', new THREE.BufferAttribute(handPositions, 3)); // Atribut koordinat tangan
+        particleGeometry.setAttribute('aHandPos', new THREE.BufferAttribute(handPositions, 3)); 
+        particleGeometry.setAttribute('aAmbientPos', new THREE.BufferAttribute(ambientPositions, 3));
+        particleGeometry.setAttribute('aPlanetID', new THREE.BufferAttribute(planetIDs, 1)); // Atribut untuk tabrakan
 
-        // SHADER UPDATE UNTUK EFEK PARTIKEL BENTUK TANGAN
         const particleMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 uTime: { value: 0 },
                 uColor: { value: AppState.baseColor },
                 uScale: { value: 1.0 },       
-                uGrip: { value: 0.0 }, // Kekuatan genggaman (0 = terbuka, 1 = mengepal)
+                uWeightAmbient: { value: 1.0 }, 
+                uWeightHand: { value: 0.0 }, 
+                uWeightPattern: { value: 0.0 }, 
                 uTransition: { value: 1.0 },  
+                uGripBlast: { value: 0.0 }, // Animasi ledakan
                 uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
             },
             vertexShader: `
                 uniform float uTime;
                 uniform float uScale;
-                uniform float uGrip;
+                uniform float uWeightAmbient;
+                uniform float uWeightHand;
+                uniform float uWeightPattern;
                 uniform float uTransition;
+                uniform float uGripBlast;
                 uniform float uPixelRatio;
 
                 attribute vec3 aTarget;
                 attribute vec3 aRandom;
                 attribute vec3 aHandPos;
+                attribute vec3 aAmbientPos;
+                attribute float aPlanetID;
 
                 varying float vAlpha;
-                varying float vGrip;
+                varying float vHandWeight;
+                varying float vPatternWeight;
+                varying float vBlast;
 
                 void main() {
-                    vGrip = uGrip;
+                    vHandWeight = uWeightHand;
+                    vPatternWeight = uWeightPattern;
+                    vBlast = uGripBlast;
+                    
+                    // Transisi ubah pola dari menu
                     vec3 morphedPos = mix(position, aTarget, uTransition);
 
-                    // Posisi normal (Pola teks/galaksi dll)
+                    // POSISI 1: Pola Normal (Teks/Galaksi/Bola)
                     vec3 normalPos = morphedPos;
-                    // Sedikit efek melayang
                     normalPos.x += sin(uTime * 1.5 + normalPos.y * 2.0) * 0.1;
                     normalPos.y += cos(uTime * 1.2 + normalPos.z * 2.0) * 0.1;
+                    normalPos += aRandom * (uGripBlast * 2.5); // Dorongan keluar saat mengepal
 
-                    // Posisi saat ditarik menjadi partikel bentuk kerangka tangan
-                    vec3 handPos = aHandPos + (aRandom * 0.025); // DIUBAH: Mengurangi noise secara drastis (dari 0.15 ke 0.025) agar garis jari sangat tajam & padat
+                    // POSISI 2: Partikel menyusun kerangka Jari/Tangan
+                    vec3 handPos = aHandPos + (aRandom * 0.025); 
+
+                    // POSISI 3: Tabrakan 2 Galaksi / Planet (Kosong/Ambient)
+                    vec3 localPos = aAmbientPos;
                     
-                    // Transisi dari pola normal ke bentuk tangan asli berdasarkan tarikan (uGrip)
-                    float t = smoothstep(0.0, 0.8, uGrip);
-                    vec3 finalPos = mix(normalPos, handPos, t) * uScale;
+                    // 1. Pusaran rotasi pada inti galaksinya
+                    float localDist = length(localPos.xz);
+                    float localSpin = uTime * (2.0 / (localDist + 0.5)) * aPlanetID;
+                    float sl = sin(localSpin); float cl = cos(localSpin);
+                    localPos = vec3(localPos.x * cl - localPos.z * sl, localPos.y, localPos.x * sl + localPos.z * cl);
+                    
+                    // 2. Jarak planet bertabrakan (bergerak mendekat dan menjauh via cosinus)
+                    float crashCycle = cos(uTime * 0.3); 
+                    float orbitDist = 15.0 * crashCycle;
+                    
+                    // 3. Putaran orbit global berdua
+                    float globalOrbit = uTime * 0.5;
+                    float sg = sin(globalOrbit); float cg = cos(globalOrbit);
+                    
+                    vec3 corePos = vec3(orbitDist * aPlanetID, sin(uTime * 1.5 + aPlanetID)*1.5, (orbitDist * 0.5) * aPlanetID);
+                    corePos = vec3(corePos.x * cg - corePos.z * sg, corePos.y, corePos.x * sg + corePos.z * cg);
+                    
+                    // 4. Efek ledakan partikel berserakan saat bertabrakan di tengah
+                    float distToCenter = length(corePos);
+                    if (distToCenter < 6.0) {
+                        float chaos = (6.0 - distToCenter) * 0.8;
+                        localPos += aRandom * chaos * sin(uTime * 15.0);
+                        localPos.y += sin(localPos.x * 15.0 + uTime) * chaos;
+                        localPos *= 1.0 + chaos * 0.2;
+                    }
+                    
+                    vec3 ambientPos = corePos + localPos;
+                    
+                    // Mix 3 posisi berdasarkan weight transisi aktif
+                    vec3 finalPos = (ambientPos * uWeightAmbient) + (handPos * uWeightHand) + (normalPos * uWeightPattern);
+                    finalPos *= uScale;
 
                     vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
                     
-                    // Ukuran titik partikel
-                    gl_PointSize = (8.0 * uPixelRatio) / -mvPosition.z;
+                    // Ukuran titik partikel, membesar saat meledak
+                    gl_PointSize = (8.0 * uPixelRatio) / -mvPosition.z * (1.0 + uGripBlast * 2.0);
                     vAlpha = clamp(1.0 - (mvPosition.z * 0.02), 0.2, 1.0);
 
                     gl_Position = projectionMatrix * mvPosition;
@@ -414,7 +478,9 @@
             fragmentShader: `
                 uniform vec3 uColor;
                 varying float vAlpha;
-                varying float vGrip;
+                varying float vHandWeight;
+                varying float vPatternWeight;
+                varying float vBlast;
 
                 void main() {
                     vec2 coord = gl_PointCoord - vec2(0.5);
@@ -424,11 +490,15 @@
                     
                     float intensity = pow(1.0 - (dist * 2.0), 1.5);
                     
-                    // Berubah dari warna dasar menjadi warna plasma inti putih/kuning saat mengepal
+                    // Warna plasma inti putih/kuning
                     vec3 coreColor = vec3(1.0, 1.0, 0.8); 
-                    vec3 finalColor = mix(uColor, coreColor, vGrip * 0.8);
+                    vec3 blastColor = vec3(1.0, 0.6, 0.1); 
                     
-                    gl_FragColor = vec4(finalColor, intensity * vAlpha + (vGrip * 0.3));
+                    // Warnanya berubah tergantung fase partikelnya
+                    vec3 finalColor = mix(uColor, coreColor, vHandWeight * 0.8 + vPatternWeight * 0.5);
+                    finalColor = mix(finalColor, blastColor, vBlast); // Terapkan warna kilatan panas
+                    
+                    gl_FragColor = vec4(finalColor, intensity * vAlpha + (vHandWeight * 0.3) + (vBlast * 0.6));
                 }
             `,
             transparent: true,
@@ -439,7 +509,6 @@
         const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
 
-        // --- Functions ---
         function changePattern(newPatternName) {
             AppState.currentPattern = newPatternName;
             AppState.isTransitioning = true;
@@ -462,6 +531,7 @@
             targetAttr.needsUpdate = true;
         }
 
+        // Fungsi menghitung seberapa kuat tangan mengepal
         function calculateHandOpenness(landmarks) {
             const wrist = landmarks[0];
             const fingers = [
@@ -483,9 +553,7 @@
             }
             
             const avgRatio = totalRatio / 4.0;
-            
-            // DIUBAH: Jangkauan kepalan diperbaiki agar mendeteksi genggaman erat dan buka jari yang sempurna 
-            const minRatio = 0.8; // Lebarkan toleransi saat jari melipat rapat
+            const minRatio = 0.8; 
             const maxRatio = 1.8; 
             
             let openness = (avgRatio - minRatio) / (maxRatio - minRatio);
@@ -493,7 +561,6 @@
             return openness * openness * (3 - 2 * openness); // Smoothstep
         }
 
-        // --- MediaPipe Initialization ---
         let hands;
         let cameraMP;
 
@@ -561,7 +628,10 @@
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                trackingStatus.innerText = "Pelacakan Aktif";
+                // (DIUBAH) Langsung set terdeteksi, tanpa mengukur genggaman
+                AppState.isHandDetected = true; 
+                
+                trackingStatus.innerText = "Tangan Terlacak";
                 trackingStatus.className = "mt-1 text-center text-[10px] font-mono text-green-400 leading-tight";
                 
                 const landmarks = results.multiHandLandmarks[0];
@@ -569,25 +639,19 @@
                 window.drawConnectors(canvasCtx, landmarks, window.HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 1.5});
                 window.drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 0.5, radius: 1.5});
                 
-                // Set seberapa buka tangannya
+                // Deteksi Genggaman secara Realtime
                 AppState.targetGestureOpenness = calculateHandOpenness(landmarks);
 
-                // DIUBAH: Menghitung skala jangkauan ruang 3D kamera (Frustum) secara real-time
-                // Agar koordinat tangan selalu presisi & tidak meleset walau di pinggir layar
                 const vFov = camera.fov * Math.PI / 180;
                 const viewportHeight = 2 * Math.tan(vFov / 2) * Math.abs(camera.position.z);
                 const viewportWidth = viewportHeight * (window.innerWidth / window.innerHeight);
 
-                // Mengambil posisi telapak tangan (Pangkal jari tengah) untuk titik pusat partikel
                 const palm = landmarks[9];
-                
-                // Menerjemahkan koordinat 2D kamera (0..1) ke dunia 3D presisi tinggi
                 const targetX = (0.5 - palm.x) * viewportWidth; 
                 const targetY = -(palm.y - 0.5) * viewportHeight;
                 
                 AppState.targetHandPosition.set(targetX, targetY, 0);
 
-                // Update posisi partikel agar menyebar ke seluruh sendi/tulang jari
                 if (window.HAND_CONNECTIONS) {
                     const handPosArray = particleGeometry.attributes.aHandPos.array;
                     const connections = window.HAND_CONNECTIONS;
@@ -599,49 +663,41 @@
                         const startNode = landmarks[bone[0]];
                         const endNode = landmarks[bone[1]];
                         
-                        // DIUBAH: Memberikan tumpukan partikel di sudut-sudut sendi (Knuckles/Fingertips)
                         let t = boneLerp[i];
-                        if (i % 4 === 0) t = 1.0; // 25% partikel menumpuk di ujung tulang
-                        if (i % 4 === 1) t = 0.0; // 25% partikel menumpuk di pangkal tulang
-                        // Sisanya 50% menyebar di sepanjang tulang jari
+                        if (i % 4 === 0) t = 1.0; 
+                        if (i % 4 === 1) t = 0.0; 
 
-                        // Dapatkan titik di antara garis tulang menggunakan interpolasi (Lerp)
                         const x = startNode.x + (endNode.x - startNode.x) * t;
                         const y = startNode.y + (endNode.y - startNode.y) * t;
                         const z = startNode.z + (endNode.z - startNode.z) * t;
 
-                        // Konversi ke koordinat ruang 3D sesuai viewport dinamis layar Anda
                         const lx = (0.5 - x) * viewportWidth - targetX; 
                         const ly = -(y - 0.5) * viewportHeight - targetY;
-                        const lz = -z * viewportWidth * 1.5; // Depth Z ditarik lebih dalam agar terlihat 3D bervolume
+                        const lz = -z * viewportWidth * 1.5; 
 
                         handPosArray[i * 3] = lx;
                         handPosArray[i * 3 + 1] = ly;
                         handPosArray[i * 3 + 2] = lz;
                     }
-                    // Minta Three.js untuk update atribut secara real-time
                     particleGeometry.attributes.aHandPos.needsUpdate = true;
                 }
 
             } else {
-                trackingStatus.innerText = "Tangan Tidak Terdeteksi";
-                trackingStatus.className = "mt-1 text-center text-[10px] font-mono text-yellow-500 leading-tight";
+                AppState.isHandDetected = false;
+                trackingStatus.innerText = "Mencari Tangan...";
+                trackingStatus.className = "mt-1 text-center text-[10px] font-mono text-yellow-500 animate-pulse leading-tight";
                 
-                AppState.targetGestureOpenness = 1.0; 
-                // Jika tangan hilang, kembali perlahan ke tengah layar
-                AppState.targetHandPosition.set(0, 0, 0);
+                AppState.targetGestureOpenness = 1.0;
+                AppState.targetHandPosition.set(0, 0, 0); // Kembali ke tengah
             }
             canvasCtx.restore();
         }
 
-        // --- Event Listeners ---
-        
-        // Listener Input Teks
+        // --- Event Listeners UI ---
         btnApplyText.addEventListener('click', () => {
             const newText = textInput.value.trim() || "KOSONG";
             AppState.textPoints = generateTextPoints(newText);
             
-            // Otomatis pindah ke mode text jika sedang di mode lain
             patternSelect.value = "text";
             changePattern("text");
         });
@@ -684,7 +740,6 @@
             initCamera();
         });
 
-        // --- Animation Loop ---
         const clock = new THREE.Clock();
 
         function animate() {
@@ -697,6 +752,7 @@
 
             particleMaterial.uniforms.uTime.value = time;
 
+            // Animasi transisi pindah pola (dari menu drop down)
             if (AppState.isTransitioning) {
                 AppState.transitionProgress += delta * 1.5; 
                 if (AppState.transitionProgress >= 1.0) {
@@ -706,39 +762,72 @@
                 particleMaterial.uniforms.uTransition.value = AppState.transitionProgress;
             }
 
-            // --- ANIMASI MENGIKUTI TANGAN ---
-            // Lerp (Linear Interpolation) agar pergerakannya mulus mengikuti target
+            // --- ANIMASI TERBENTUKNYA TANGAN & EFEK LEDAKAN MENGEPAL ---
             AppState.currentHandPosition.lerp(AppState.targetHandPosition, 5.0 * delta);
             particleSystem.position.copy(AppState.currentHandPosition);
 
-            // Menghaluskan pembacaan gestur kepalan tangan
-            AppState.gestureOpenness += (AppState.targetGestureOpenness - AppState.gestureOpenness) * 0.2;
+            // Lerp Hand Openness (Penghalus data kamera)
+            AppState.gestureOpenness += (AppState.targetGestureOpenness - AppState.gestureOpenness) * (delta * 8.0);
             
-            // Hitung kekuatan genggaman (1.0 = Mengepal Kuat, 0.0 = Buka)
-            const gripStrength = 1.0 - AppState.gestureOpenness;
+            // Logika Mengepal
+            const wasGripped = AppState.isGripped;
+            AppState.isGripped = AppState.gestureOpenness < 0.35; // Batas mengepal
 
-            particleMaterial.uniforms.uScale.value = 1.0;
-            particleMaterial.uniforms.uGrip.value = gripStrength;
+            // Trigger efek ledakan persis saat jari mengepal penuh
+            if (AppState.isGripped && !wasGripped && AppState.isHandDetected) {
+                AppState.gripBlast = 1.0;
+            }
+            // Meredakan energi ledakan perlahan-lahan
+            AppState.gripBlast = THREE.MathUtils.lerp(AppState.gripBlast, 0.0, delta * 3.0);
 
-            // EFEK CAHAYA (BLOOM) Makin terang saat jadi bola energi
-            bloomPass.strength = 1.2 + (gripStrength * 1.5);
+            // Logika 3 Fase (State Machine Transisi):
+            // 1. Tangan Tidak Ada -> Kosong melayang bebas (Ambient)
+            // 2. Tangan Terbuka -> Menyusun jari (Hand)
+            // 3. Tangan Mengepal -> Membentuk teks/pola (Pattern)
+            let tAmbient = 0.0, tHand = 0.0, tPattern = 0.0;
+            
+            if (!AppState.isHandDetected) {
+                tAmbient = 1.0;
+            } else {
+                if (AppState.isGripped) tPattern = 1.0;
+                else tHand = 1.0;
+            }
 
-            // Update UI Bar
+            // Penghalusan transisi morphing grafik
+            const morphSpeed = AppState.isHandDetected ? 7.0 : 2.5;
+            AppState.weightAmbient += (tAmbient - AppState.weightAmbient) * (delta * morphSpeed);
+            AppState.weightHand += (tHand - AppState.weightHand) * (delta * morphSpeed);
+            AppState.weightPattern += (tPattern - AppState.weightPattern) * (delta * morphSpeed);
+
+            particleMaterial.uniforms.uScale.value = 1.0 + (AppState.gripBlast * 0.15); // Mengembang sesaat saat meledak
+            particleMaterial.uniforms.uWeightAmbient.value = AppState.weightAmbient;
+            particleMaterial.uniforms.uWeightHand.value = AppState.weightHand;
+            particleMaterial.uniforms.uWeightPattern.value = AppState.weightPattern;
+            particleMaterial.uniforms.uGripBlast.value = AppState.gripBlast;
+
+            // EFEK CAHAYA (BLOOM) Makin terang gila saat meledak
+            bloomPass.strength = 1.2 + (AppState.weightHand * 0.4) + (AppState.weightPattern * 0.6) + (AppState.gripBlast * 2.5);
+
+            // Update UI Bar Indikator Mengepal
             gestureBar.style.width = `${Math.max(5, AppState.gestureOpenness * 100)}%`;
-            if (AppState.gestureOpenness > 0.8) gestureBar.className = "bg-green-400 h-full transition-all duration-75";
-            else if (AppState.gestureOpenness < 0.3) gestureBar.className = "bg-red-400 h-full transition-all duration-75";
-            else gestureBar.className = "bg-yellow-400 h-full transition-all duration-75";
+            if (AppState.isGripped) gestureBar.className = "bg-red-500 h-full transition-all duration-75 shadow-[0_0_10px_red]";
+            else if (AppState.gestureOpenness < 0.7) gestureBar.className = "bg-yellow-400 h-full transition-all duration-75";
+            else gestureBar.className = "bg-blue-400 h-full transition-all duration-75";
 
             // Animasi rotasi ambient
-            if (AppState.currentPattern === 'text') {
-                // Teks usahakan lurus menghadap kamera
-                particleSystem.rotation.y = THREE.MathUtils.lerp(particleSystem.rotation.y, 0, delta * 2);
+            if (AppState.isHandDetected && !AppState.isGripped) {
+                // Tangan usahakan lurus menghadap kamera
+                particleSystem.rotation.y = THREE.MathUtils.lerp(particleSystem.rotation.y, 0, delta * 5);
+                particleSystem.rotation.x = THREE.MathUtils.lerp(particleSystem.rotation.x, 0, delta * 5);
             } else {
-                // Pola lain berputar lambat
-                particleSystem.rotation.y += delta * 0.2;
+                if (AppState.currentPattern === 'text') {
+                    particleSystem.rotation.y = THREE.MathUtils.lerp(particleSystem.rotation.y, 0, delta * 2);
+                    particleSystem.rotation.x = THREE.MathUtils.lerp(particleSystem.rotation.x, 0, delta * 2);
+                } else {
+                    particleSystem.rotation.y += delta * 0.2; // Pola bola/galaksi berputar pelan
+                }
             }
             
-            // Bintang Latar berputar sangat lambat
             starField.rotation.y -= delta * 0.02;
 
             composer.render();
