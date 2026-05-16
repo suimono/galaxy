@@ -22,7 +22,6 @@
             --text-muted: rgba(255, 255, 255, 0.4);
             --glass-border: rgba(255, 255, 255, 0.08);
             --glass-bg: rgba(255, 255, 255, 0.03);
-            /* Safe area insets for notch and camera island devices */
             --sat: env(safe-area-inset-top, 0px);
             --sar: env(safe-area-inset-right, 0px);
             --sab: env(safe-area-inset-bottom, 0px);
@@ -52,7 +51,7 @@
             font-family: 'Space Grotesk', sans-serif; 
         }
 
-        /* ── Background Patterns ── */
+        /* Background Noise and Grid Effects */
         .noise-bg {
             position: fixed;
             inset: 0;
@@ -83,7 +82,7 @@
             -webkit-text-stroke: 1px rgba(255,255,255,0.4); 
         }
 
-        /* ── Scrollbar ── */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { 
             width: 6px; 
         }
@@ -98,7 +97,6 @@
             background: var(--accent); 
         }
 
-        /* ── Animations & Overlays ── */
         #mobile-overlay {
             clip-path: circle(0% at 92% 5%);
             transition: clip-path 0.8s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.8s;
@@ -174,7 +172,7 @@
             padding-right: max(1.5rem, var(--sar));
         }
 
-        #showreel-overlay, #project-modal, #contact-modal {
+        #showreel-overlay, #project-modal, #contact-modal, #ethereal-remover-modal {
             padding-top: var(--sat);
             padding-bottom: var(--sab);
         }
@@ -183,17 +181,7 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        @media (max-width: 767px) {
-            .bento-card { padding: 1.5rem; }
-            .bento-headline { font-size: clamp(1.75rem, 8vw, 3rem); }
-        }
-
-        @media (max-width: 480px) {
-            .play-btn { width: 5rem; height: 5rem; }
-            .play-btn svg { transform: scale(0.75); }
-        }
-
-        /* Transparent Checkerboard pattern for PNG outputs */
+        /* Transparent Checkerboard pattern for Canvas and Image Outputs */
         .transparent-pattern {
             background-image: 
                 linear-gradient(45deg, #111 25%, transparent 25%), 
@@ -204,6 +192,12 @@
             background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
             background-color: #050505;
         }
+
+        /* Interactive Canvas Styling */
+        #interactive-canvas {
+            cursor: crosshair;
+            touch-action: none;
+        }
     </style>
 </head>
 <body class="bg-[#030303] text-white selection:bg-purple-500/30 min-h-screen">
@@ -211,7 +205,6 @@
     <div class="noise-bg"></div>
     <div class="grid-bg"></div>
 
-    <!-- ── STREAMING_CHUNK: Rendering navigation interfaces... ── -->
     <!-- ── NAVIGATION BAR ── -->
     <nav id="navbar" class="fixed left-0 top-0 z-[100] w-full transition-all duration-700">
         <div id="nav-container" class="mx-auto flex max-w-[1400px] items-center justify-between px-5 sm:px-8 md:px-12 transition-all duration-500 py-4 sm:py-5">
@@ -255,7 +248,6 @@
         <a href="#contact" onclick="toggleMenu()" class="font-display text-[min(12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">CONTACT</a>
     </div>
 
-    <!-- ── STREAMING_CHUNK: Initializing hero interface layouts... ── -->
     <!-- ── MAIN CONTENT ── -->
     <main class="relative z-10">
 
@@ -320,7 +312,7 @@
             </div>
         </div>
 
-        <!-- ── STREAMING_CHUNK: Building portfolio index displays... ── -->
+        <!-- ── STREAMING_CHUNK: Setting up Work/Portfolio list displays... ── -->
         <!-- ── WORK / PORTFOLIO SECTION ── -->
         <section id="work" class="relative mx-auto max-w-[1500px] overflow-hidden px-5 sm:px-8 md:px-12 py-20 sm:py-28 md:py-40">
             <div class="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-purple-500/10 blur-[140px]"></div>
@@ -445,8 +437,8 @@
                     </div>
                 </div>
 
-                <!-- ── STREAMING_CHUNK: Integrating Ethereal AI Image tools... ── -->
-                <!-- ── PROJECT 02: ETHEREAL (AI BACKGROUND REMOVER) ── -->
+                <!-- ── STREAMING_CHUNK: Integrating Ethereal AI Image tools with 3-Mode Remover Engine... ── -->
+                <!-- ── PROJECT 02: ETHEREAL (HYBRID BG REMOVER) ── -->
                 <div class="project-card group relative overflow-hidden rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5 backdrop-blur-xl transition-all duration-700 hover:border-purple-500/30 hover:bg-white/[0.05]">
                     <div class="grid grid-cols-1 md:grid-cols-12 items-center gap-8 sm:gap-14">
                         
@@ -456,7 +448,7 @@
                                     <i data-lucide="cpu" class="w-3 h-3"></i> AI Vision
                                 </span>
                                 <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300 inline-flex items-center gap-1.5">
-                                    <i data-lucide="image" class="w-3 h-3"></i> WASM Engine
+                                    <i data-lucide="wand-2" class="w-3 h-3"></i> Multi-Engine
                                 </span>
                             </div>
                             
@@ -465,7 +457,7 @@
                             </h3>
                             
                             <p class="mb-8 sm:mb-10 max-w-md text-sm leading-relaxed text-white/55">
-                                Redefining visual isolation using advanced neural models running natively inside your browser pipeline without servers.
+                                Redefining visual isolation using advanced neural models running locally, coupled with high-speed Chroma Key and manual precision brushes.
                             </p>
                             
                             <button onclick="openEtherealRemoverModal()" class="group/btn flex items-center gap-4 sm:gap-5 text-[11px] font-bold uppercase tracking-[0.35em] text-white hover:text-purple-300">
@@ -485,25 +477,25 @@
                     </div>
                 </div>
 
-                <!-- ── ETHEREAL REMOVER MODAL ── -->
-                <div id="ethereal-remover-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 transition-all duration-300">
-                    <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeEtherealRemoverModal()"></div>
+                <!-- ── ETHEREAL REMOVER MODAL (HYBRID ENGINE WITH INTERACTIVE CANVAS) ── -->
+                <div id="ethereal-remover-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 transition-all duration-300 overflow-y-auto">
+                    <div class="absolute inset-0 bg-black/85 backdrop-blur-md animate-[fadeIn_0.3s_ease]" onclick="closeEtherealRemoverModal()"></div>
                     
-                    <div class="relative w-full max-w-2xl bg-[#050505] border border-white/10 rounded-3xl p-6 sm:p-8 overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300" id="remover-modal-content">
+                    <div class="relative w-full max-w-4xl bg-[#050505] border border-white/10 rounded-3xl p-5 sm:p-8 overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 my-auto z-10" id="remover-modal-content">
                         <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
                         
                         <!-- Header -->
-                        <div class="flex items-center justify-between mb-6 relative z-10">
+                        <div class="flex items-center justify-between mb-4 sm:mb-6 relative z-10">
                             <div>
-                                <h4 class="text-xs font-bold tracking-[0.3em] text-purple-400 uppercase">Ethereal Module</h4>
-                                <h2 class="text-2xl font-black tracking-tight text-white mt-1">AI BG REMOVER</h2>
+                                <h4 class="text-xs font-bold tracking-[0.3em] text-purple-400 uppercase">Ethereal Hybrid Engine</h4>
+                                <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">BACKGROUND REMOVER v2.0</h2>
                             </div>
                             <button onclick="closeEtherealRemoverModal()" class="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all">
                                 <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
                         </div>
 
-                        <!-- Interactive Drag & Drop Area -->
+                        <!-- File Input / Drag and Drop Area -->
                         <div id="remover-dropzone" class="relative group border border-dashed border-white/10 hover:border-purple-500/40 bg-white/[0.01] rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 z-10">
                             <input type="file" id="remover-file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
                             <div class="flex flex-col items-center gap-3">
@@ -512,7 +504,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs font-bold text-white uppercase tracking-wider">Pilih Gambar atau Drop di Sini</p>
-                                    <p class="text-[10px] text-zinc-600 font-mono mt-1">PNG, JPG, WEBP (PROSES 100% LOKAL & AMAN)</p>
+                                    <p class="text-[10px] text-zinc-600 font-mono mt-1">PNG, JPG, WEBP (PROSES 100% LOKAL & ANTI-BLOKIR)</p>
                                 </div>
                             </div>
                         </div>
@@ -520,30 +512,85 @@
                         <!-- Processing Loader States -->
                         <div id="remover-loader" class="hidden flex-col items-center py-10 relative z-10 text-center">
                             <div class="w-10 h-10 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
-                            <p class="mt-4 text-[10px] tracking-[0.2em] text-purple-400 font-bold uppercase animate-pulse">Menghubungkan Model AI Lokal</p>
-                            <p class="text-[9px] text-zinc-600 font-mono mt-1 px-4 leading-relaxed">Pertama kali dijalankan, browser mengunduh modul visual seukuran ~40MB langsung ke memori internal Anda. Selanjutnya pemrosesan akan berjalan instan!</p>
+                            <p id="remover-loader-text" class="mt-4 text-[10px] tracking-[0.2em] text-purple-400 font-bold uppercase animate-pulse">Menghubungkan Model AI Lokal</p>
+                            <p class="text-[9px] text-zinc-600 font-mono mt-1 px-4 max-w-md mx-auto leading-relaxed">
+                                Mohon tunggu... Jika alokasi WASM diblokir oleh platform sandbox, kami akan mengaktifkan sistem manual & Chroma Key secara instan sebagai alternatif!
+                            </p>
                         </div>
 
-                        <!-- Extraction Output Panel -->
-                        <div id="remover-result" class="hidden mt-6 pt-6 border-t border-white/5 relative z-10 space-y-6">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="space-y-1.5">
-                                    <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Original</span>
-                                    <div class="rounded-xl border border-white/5 overflow-hidden aspect-video bg-zinc-950">
-                                        <img id="remover-img-orig" class="w-full h-full object-contain" alt="Original Image">
+                        <!-- Interactive Studio Panel (Appears once image is loaded) -->
+                        <div id="remover-studio" class="hidden relative z-10 flex flex-col md:grid md:grid-cols-12 gap-5">
+                            
+                            <!-- Sidebar Controls (Col-span 4) -->
+                            <div class="md:col-span-4 bg-[#080808] border border-white/5 rounded-2xl p-4 flex flex-col justify-between gap-5">
+                                <div class="space-y-4">
+                                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-white/5 pb-2">Kontrol Studio</p>
+                                    
+                                    <!-- Tool Toggles -->
+                                    <div class="space-y-2">
+                                        <p class="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Pilih Metode:</p>
+                                        
+                                        <!-- Tool: Chroma Key -->
+                                        <button id="tool-chroma" onclick="switchTool('chroma')" class="w-full flex items-center justify-between bg-purple-500/10 border border-purple-500/30 text-white rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase transition-all">
+                                            <span class="flex items-center gap-2"><i data-lucide="pipette" class="w-4 h-4"></i> 1. Tap-to-Remove</span>
+                                            <span class="text-[8px] bg-purple-500 text-black px-1.5 py-0.5 rounded uppercase font-black">Chroma</span>
+                                        </button>
+
+                                        <!-- Tool: Manual Eraser -->
+                                        <button id="tool-erase" onclick="switchTool('erase')" class="w-full flex items-center justify-between bg-white/5 border border-white/10 text-zinc-400 hover:text-white rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase transition-all">
+                                            <span class="flex items-center gap-2"><i data-lucide="brush" class="w-4 h-4"></i> 2. Kuas Penghapus</span>
+                                            <span class="text-[8px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded uppercase font-black">Eraser</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Chroma Key Instructions -->
+                                    <div id="chroma-instructions" class="bg-purple-950/20 border border-purple-500/10 rounded-xl p-3 text-[10px] leading-relaxed text-purple-300">
+                                        <strong class="block mb-1">💡 Cara Tap-to-Remove:</strong>
+                                        Klik langsung pada area warna latar belakang gambar (misal warna putih atau warna solid lainnya) untuk menghapusnya secara instan!
+                                        <div class="mt-3">
+                                            <label class="block mb-1 font-bold text-[9px] uppercase tracking-wider">Toleransi Warna:</label>
+                                            <input type="range" id="chroma-tolerance" min="5" max="100" value="30" oninput="updateToleranceLabel(this.value)" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                                            <span id="tolerance-val" class="block text-right mt-1 font-mono text-[9px] text-zinc-500">30%</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Eraser Controls -->
+                                    <div id="erase-controls" class="hidden bg-zinc-950 border border-white/5 rounded-xl p-3 text-[10px] leading-relaxed text-zinc-400 space-y-3">
+                                        <strong class="block text-white">🖌️ Atur Ukuran Kuas:</strong>
+                                        <div class="flex items-center gap-3">
+                                            <input type="range" id="brush-size" min="5" max="80" value="25" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                                            <span id="brush-size-val" class="font-mono font-bold text-white shrink-0">25px</span>
+                                        </div>
+                                        <button onclick="resetToOriginal()" class="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-2 rounded-lg text-[9px] uppercase tracking-wider transition-all flex items-center justify-center gap-1">
+                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Perubahan
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="space-y-1.5">
-                                    <span class="text-[9px] font-bold text-purple-400 uppercase tracking-widest block">Result PNG</span>
-                                    <div class="rounded-xl border border-purple-500/20 overflow-hidden aspect-video transparent-pattern">
-                                        <img id="remover-img-out" class="w-full h-full object-contain" alt="Transparent Result">
-                                    </div>
+
+                                <div class="space-y-2 pt-4 border-t border-white/5">
+                                    <button id="remover-download-btn" class="w-full bg-white text-black hover:bg-purple-500 hover:text-white font-bold py-3 px-4 rounded-xl tracking-[0.2em] text-[10px] uppercase transition-all flex items-center justify-center gap-2">
+                                        <span>Download PNG</span>
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="closeEtherealRemoverModal()" class="w-full bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-400 hover:text-white font-bold py-2.5 px-4 rounded-xl tracking-wider text-[9px] uppercase transition-all">
+                                        Kembali ke Studio
+                                    </button>
                                 </div>
                             </div>
-                            <button id="remover-download-btn" class="w-full bg-white text-black hover:bg-purple-500 hover:text-white font-bold py-4 rounded-xl tracking-[0.2em] text-[10px] uppercase transition-all flex items-center justify-center gap-2">
-                                <span>Download Masked PNG</span>
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                            </button>
+
+                            <!-- Interactive Canvas Workspace (Col-span 8) -->
+                            <div class="md:col-span-8 flex flex-col gap-2">
+                                <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Interactive Studio Workspace</span>
+                                <div class="rounded-2xl border border-white/10 overflow-hidden bg-zinc-950 relative flex items-center justify-center transparent-pattern aspect-[4/3] max-h-[55vh]">
+                                    <!-- Interactive Canvas Element -->
+                                    <canvas id="interactive-canvas" class="max-w-full max-h-full object-contain"></canvas>
+                                </div>
+                                <div class="flex items-center justify-between text-[10px] text-zinc-500 font-mono px-1">
+                                    <span>Anti-Block Hybrid Engine (Local Native Code)</span>
+                                    <span>PNG Transparent Output</span>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -551,7 +598,7 @@
             </div>
         </section>
 
-        <!-- ── STREAMING_CHUNK: Formatting design layout bento blocks... ── -->
+        <!-- ── STREAMING_CHUNK: Integrating Labs/Bento sections... ── -->
         <!-- ── LABS / EXPERIMENTAL SECTION ── -->
         <section id="labs" class="relative mx-auto max-w-[1500px] px-5 sm:px-8 md:px-12 py-20 sm:py-28 md:py-36 overflow-hidden bg-[#030303] text-white">
             <div class="pointer-events-none absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-to-b from-purple-600/20 to-blue-600/0 blur-[140px]"></div>
@@ -570,12 +617,6 @@
             <!-- Marquee Divider -->
             <div class="relative overflow-hidden py-5 sm:py-6 border-y border-white/[0.05] bg-white/[0.002] mb-12 sm:mb-16 [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
                 <div class="marquee-animation flex w-max items-center gap-16 sm:gap-20">
-                    <div class="flex items-center gap-16 sm:gap-20 shrink-0">
-                        <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
-                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
-                        <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
-                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
-                    </div>
                     <div class="flex items-center gap-16 sm:gap-20 shrink-0">
                         <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
                         <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
@@ -613,7 +654,7 @@
                             </p>
                         </div>
 
-                        <a href="galaxy.html" class="group/cta inline-flex items-center gap-4 sm:gap-5 self-start md:self-end shrink-0">
+                        <a href="#" class="group/cta inline-flex items-center gap-4 sm:gap-5 self-start md:self-end shrink-0">
                             <div class="relative overflow-hidden h-6">
                                 <span class="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-white/60 transition-transform duration-500 ease-out group-hover/cta:-translate-y-full">Explore Lab</span>
                                 <span class="absolute left-0 top-0 block translate-y-full text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-purple-400 transition-transform duration-500 ease-out group-hover/cta:translate-y-0">Enter Galaxy</span>
@@ -627,24 +668,6 @@
 
                     <!-- Noise Overlay -->
                     <div class="absolute inset-0 opacity-[0.015] mix-blend-overlay pointer-events-none z-20" style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');"></div>
-                </div>
-            </div>
-
-            <!-- Marquee Divider Bottom -->
-            <div class="relative overflow-hidden py-5 sm:py-6 border-y border-white/[0.05] bg-white/[0.002] [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
-                <div class="marquee-animation flex w-max items-center gap-16 sm:gap-20">
-                    <div class="flex items-center gap-16 sm:gap-20 shrink-0">
-                        <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
-                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
-                        <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
-                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
-                    </div>
-                    <div class="flex items-center gap-16 sm:gap-20 shrink-0">
-                        <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
-                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
-                        <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
-                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
-                    </div>
                 </div>
             </div>
         </section>
@@ -679,7 +702,6 @@
         </div>
     </footer>
 
-    <!-- ── STREAMING_CHUNK: Integrating active modal and video triggers... ── -->
     <!-- ── SHOWREEL OVERLAY ── -->
     <div id="showreel-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-black opacity-0 pointer-events-none transition-opacity duration-500">
         <button onclick="closeShowreel()" aria-label="Close showreel" class="absolute right-5 top-5 sm:right-8 sm:top-8 z-50 text-white/50 hover:text-white p-2">
@@ -693,24 +715,6 @@
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <p class="font-display text-base sm:text-2xl font-black tracking-widest opacity-20 uppercase">Our Studio Showreel 2026</p>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── PROJECT MODAL ── -->
-    <div id="project-modal" class="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 modal-blur opacity-0 pointer-events-none transition-opacity duration-500 px-4">
-        <div class="w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] p-7 sm:p-10 md:p-16 relative overflow-hidden transform scale-95 transition-transform duration-500 max-h-[90vh] overflow-y-auto">
-            <div class="absolute top-0 right-0 p-5 sm:p-8">
-                <button onclick="closeProject()" aria-label="Close" class="text-white/30 hover:text-white transition-colors p-1">
-                    <i data-lucide="x" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                </button>
-            </div>
-            <p id="modal-tag" class="text-purple-400 font-bold text-[10px] uppercase tracking-[0.4em] mb-4">Case Study</p>
-            <h2 id="modal-title" class="font-display text-4xl sm:text-5xl font-black mb-5 sm:mb-6 uppercase">Project Title</h2>
-            <p id="modal-desc" class="text-white/50 leading-relaxed mb-8 sm:mb-10">Detailed description will appear here.</p>
-            <div class="flex gap-3 sm:gap-4">
-                <button onclick="showAlert('Opening Live Preview...')" class="flex-1 bg-white text-black py-3 sm:py-4 rounded-full font-bold text-[11px] uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-colors active:scale-95">Live Site</button>
-                <button onclick="closeProject()" class="flex-1 border border-white/10 py-3 sm:py-4 rounded-full font-bold text-[11px] uppercase tracking-widest hover:bg-white/5 transition-colors active:scale-95">Close</button>
             </div>
         </div>
     </div>
@@ -756,7 +760,7 @@
     <!-- ======================================================= -->
     <!--  JAVASCRIPT CONTROLLER MODULE                           -->
     <!-- ======================================================= -->
-    <!-- ── STREAMING_CHUNK: Initializing interactive Javascript logic and failsafes... ── -->
+    <!-- ── STREAMING_CHUNK: Initializing interactive Javascript logic and hybrid canvas controllers... ── -->
     <script>
         // Initialize Icons
         if (typeof lucide !== 'undefined') {
@@ -773,8 +777,20 @@
         const iconClose = document.getElementById('icon-close');
         const alertBox = document.getElementById('alert-box');
 
-        let removedBlobUrl = null;
+        // Dynamic Studio & Canvas States
+        let uploadedImage = null; // Menyimpan objek Image()
+        let activeTool = 'chroma'; // 'chroma' atau 'erase'
+        let chromaTolerance = 30;
+        let brushSize = 25;
+        let isDrawing = false;
         let originalDropzoneHTML = null;
+
+        const studioCanvas = document.getElementById('interactive-canvas');
+        const studioCtx = studioCanvas ? studioCanvas.getContext('2d') : null;
+
+        // Buffer canvas untuk restorasi modifikasi secara pixel-by-pixel
+        let backupCanvas = document.createElement('canvas');
+        let backupCtx = backupCanvas.getContext('2d');
 
         // Save original Dropzone layout on DOM Load to ensure reusable clean state resets
         document.addEventListener("DOMContentLoaded", () => {
@@ -873,32 +889,6 @@
             }
         }
 
-        // Case study details modal
-        function openProject(t, desc) {
-            const modal = document.getElementById('project-modal');
-            const modalBox = modal ? modal.querySelector('div') : null;
-            if (modal && modalBox) {
-                document.getElementById('modal-title').innerText = t;
-                document.getElementById('modal-desc').innerText = desc;
-                modal.classList.remove('pointer-events-none');
-                modal.classList.add('opacity-100');
-                modalBox.classList.remove('scale-95');
-                modalBox.classList.add('scale-100');
-                document.body.classList.add('no-scroll');
-            }
-        }
-        function closeProject() {
-            const modal = document.getElementById('project-modal');
-            const modalBox = modal ? modal.querySelector('div') : null;
-            if (modal && modalBox) {
-                modal.classList.add('pointer-events-none');
-                modal.classList.remove('opacity-100');
-                modalBox.classList.add('scale-95');
-                modalBox.classList.remove('scale-100');
-                document.body.classList.remove('no-scroll');
-            }
-        }
-
         // Contact Modal Controllers
         function openContact() {
             const modal = document.getElementById('contact-modal');
@@ -970,9 +960,6 @@
         document.querySelectorAll('.reveal-on-scroll, .project-card').forEach(el => revealObserver.observe(el));
 
         // Backdrop Dismissing Events
-        document.getElementById('project-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeProject();
-        });
         document.getElementById('contact-modal').addEventListener('click', function(e) {
             if (e.target === this) closeContact();
         });
@@ -982,7 +969,7 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                closeProject(); closeContact(); closeShowreel();
+                closeContact(); closeShowreel();
                 closeVortexModal(); closeEtherealRemoverModal();
                 if (isMenuOpen) toggleMenu();
             }
@@ -1101,9 +1088,9 @@
         }
 
         // =======================================================
-        //  ETHEREAL AI BACKGROUND REMOVER SYSTEM                
+        //  ETHEREAL AI & HYBRID BACKGROUND REMOVER SYSTEM       
         // =======================================================
-        // ── STREAMING_CHUNK: Managing WASM fallback transitions... ──
+        // ── STREAMING_CHUNK: Managing WASM and canvas pixel manipulation controllers... ──
         function openEtherealRemoverModal() {
             const modal = document.getElementById('ethereal-remover-modal');
             const content = document.getElementById('remover-modal-content');
@@ -1135,15 +1122,16 @@
                         if (newInput) {
                             newInput.addEventListener('change', (e) => {
                                 if (e.target.files.length > 0) {
-                                    executeAIBackgroundRemoval(e.target.files[0]);
+                                    loadAndProcessImage(e.target.files[0]);
                                 }
                             });
                         }
                     }
                     
                     document.getElementById('remover-dropzone').classList.remove('hidden');
-                    document.getElementById('remover-result').classList.add('hidden');
+                    document.getElementById('remover-studio').classList.add('hidden');
                     document.getElementById('remover-loader').classList.add('hidden');
+                    uploadedImage = null;
                 }, 300);
             }
         }
@@ -1153,12 +1141,13 @@
         if (inputEl) {
             inputEl.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
-                    executeAIBackgroundRemoval(e.target.files[0]);
+                    loadAndProcessImage(e.target.files[0]);
                 }
             });
         }
 
-        async function executeAIBackgroundRemoval(file) {
+        // Load image to Canvas & Try AI, with Chroma/Manual as direct hybrid backup
+        async function loadAndProcessImage(file) {
             if (!file.type.startsWith('image/')) {
                 showAlert('Format file wajib berupa citra gambar!');
                 return;
@@ -1166,95 +1155,269 @@
 
             const dropzone = document.getElementById('remover-dropzone');
             const loader = document.getElementById('remover-loader');
-            const resultBox = document.getElementById('remover-result');
+            const studio = document.getElementById('remover-studio');
+            const loaderText = document.getElementById('remover-loader-text');
 
             dropzone.classList.add('hidden');
-            resultBox.classList.add('hidden');
             loader.classList.remove('hidden');
 
-            // Render original preview immediately
-            const origPreviewUrl = URL.createObjectURL(file);
-            document.getElementById('remover-img-orig').src = origPreviewUrl;
+            // Load to Image object first
+            uploadedImage = new Image();
+            uploadedImage.src = URL.createObjectURL(file);
+            
+            uploadedImage.onload = async () => {
+                // Initialize Canvases
+                setupStudioCanvases();
 
-            try {
-                // SECURITY & CORS FIX: Import @imgly/background-removal dynamically as ES Module.
-                // It runs locally inside browser sandbox, ensuring 100% data privacy and 100% reliability.
-                const imglyModule = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm');
-                const removeBackground = imglyModule.default;
+                // 1. Attempt local AI processing
+                loaderText.innerText = "AI MEMULAI: INISIALISASI MODEL";
+                try {
+                    const imglyModule = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm');
+                    const removeBackground = imglyModule.default;
 
-                // Process image segmentation with progress updates and minimum memory footprint
-                const processedBlob = await removeBackground(file, {
-                    model: 'isnet_quint8', // Extremely lightweight 8-bit quantized model (~40MB) optimized for RAM limits
-                    debug: false,
-                    device: 'cpu', // Forces CPU execution to bypass WebGL/WebGPU cross-origin sandbox blocks
-                    progress: (key, current, total) => {
-                        const percent = Math.round((current / total) * 100);
-                        const loaderText = document.querySelector('#remover-loader p.animate-pulse');
-                        if (loaderText) {
-                            loaderText.innerText = `AI MEMPROSES: ${percent}% (${key.replace('isnet_', '')})`;
+                    const processedBlob = await removeBackground(file, {
+                        model: 'isnet_quint8',
+                        debug: false,
+                        device: 'cpu',
+                        progress: (key, current, total) => {
+                            const percent = Math.round((current / total) * 100);
+                            loaderText.innerText = `AI MEMPROSES: ${percent}%`;
                         }
-                    }
-                });
+                    });
 
-                if (removedBlobUrl) {
-                    URL.revokeObjectURL(removedBlobUrl);
+                    // Draw AI Result directly onto our working Canvas
+                    const resultImg = new Image();
+                    resultImg.src = URL.createObjectURL(processedBlob);
+                    resultImg.onload = () => {
+                        studioCtx.clearRect(0, 0, studioCanvas.width, studioCanvas.height);
+                        studioCtx.drawImage(resultImg, 0, 0);
+                        
+                        // Update backup for manual brush edits
+                        backupCanvas.width = studioCanvas.width;
+                        backupCanvas.height = studioCanvas.height;
+                        backupCtx.clearRect(0, 0, backupCanvas.width, backupCanvas.height);
+                        backupCtx.drawImage(resultImg, 0, 0);
+
+                        loader.classList.add('hidden');
+                        studio.classList.remove('hidden');
+                        switchTool('erase'); // Default to manual brush for touching up AI result
+                        showAlert("AI Berhasil Menghapus Background!");
+                    };
+
+                } catch (wasmError) {
+                    console.warn("Local WASM sandboxed memory allocation failed/blocked. Switching to Manual Chroma Key Studio:", wasmError);
+                    
+                    // WASM blocked / out of memory -> Fallback directly to Chroma Key & Brush
+                    loader.classList.add('hidden');
+                    studio.classList.remove('hidden');
+                    switchTool('chroma'); // Set default tool to Chroma Key (pipette) for instant tap to remove
+                    showAlert("WASM Terblokir Sandbox. Mode Chroma/Manual Siap Digunakan!");
                 }
-                removedBlobUrl = URL.createObjectURL(processedBlob);
+            };
+        }
 
-                // Insert transparent image URL to preview display
-                document.getElementById('remover-img-out').src = removedBlobUrl;
-                
-                loader.classList.add('hidden');
-                resultBox.classList.remove('hidden');
+        // Setup canvas sizing based on loaded image
+        function setupStudioCanvases() {
+            if (!uploadedImage) return;
 
-                // Bind PNG download triggers
-                document.getElementById('remover-download-btn').onclick = () => {
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = removedBlobUrl;
-                    downloadLink.download = `Vortex_NoBG_${Date.now()}.png`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                };
+            // Maintain max design limits to avoid slowing down the browser pixels
+            const maxDimension = 1024;
+            let width = uploadedImage.width;
+            let height = uploadedImage.height;
 
-            } catch (error) {
-                console.warn("Local WASM Background removal failed, providing elegant fail-safe card:", error);
-                
-                // Fallback state on local storage memory limits or loading issues
-                loader.classList.add('hidden');
-                dropzone.classList.remove('hidden');
-                
-                // Render an incredibly helpful, premium UI explaining the browser constraints
-                dropzone.innerHTML = `
-                    <div class="flex flex-col items-center gap-4 py-6 pointer-events-auto max-w-md mx-auto text-center">
-                        <div class="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 shadow-lg shadow-purple-500/5">
-                            <i data-lucide="shield-alert" class="w-6 h-6"></i>
-                        </div>
-                        <div class="space-y-2">
-                            <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest">Proteksi Memori & Sandbox Aktif</h4>
-                            <p class="text-[11px] text-zinc-400 leading-relaxed px-2">
-                                Browser Anda memblokir alokasi WebAssembly (WASM) di dalam ruang terisolasi (*iframe sandbox*) platform ini demi alasan keamanan perangkat.
-                            </p>
-                            <p class="text-[10px] text-zinc-500 italic font-mono">
-                                Untuk memproses secara instan & tanpa batas, silakan gunakan gerbang alternatif aman di bawah ini:
-                            </p>
-                        </div>
-                        <div class="flex flex-col sm:flex-row gap-2.5 w-full mt-2 px-4 justify-center">
-                            <a href="https://www.remove.bg/upload" target="_blank" 
-                               class="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold uppercase tracking-widest py-3 px-5 rounded-xl transition-all shadow-md shadow-purple-600/10">
-                                Gunakan Remove.bg <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                            </a>
-                            <button onclick="closeEtherealRemoverModal()" 
-                               class="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-widest py-3 px-5 rounded-xl border border-white/5 transition-all">
-                                Kembali ke Studio
-                            </button>
-                        </div>
-                    </div>
-                `;
-            } finally {
-                if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (width > maxDimension || height > maxDimension) {
+                if (width > height) {
+                    height = Math.round((height * maxDimension) / width);
+                    width = maxDimension;
+                } else {
+                    width = Math.round((width * maxDimension) / height);
+                    height = maxDimension;
+                }
+            }
+
+            // On-screen Canvas
+            studioCanvas.width = width;
+            studioCanvas.height = height;
+            studioCtx.clearRect(0, 0, width, height);
+            studioCtx.drawImage(uploadedImage, 0, 0, width, height);
+
+            // Back-up Canvas for restoring original/processed stages
+            backupCanvas.width = width;
+            backupCanvas.height = height;
+            backupCtx.clearRect(0, 0, width, height);
+            backupCtx.drawImage(uploadedImage, 0, 0, width, height);
+
+            // Bind Canvas Events
+            initCanvasEvents();
+        }
+
+        // Reset changes back to the uploaded original state
+        function resetToOriginal() {
+            if (!uploadedImage) return;
+            studioCtx.clearRect(0, 0, studioCanvas.width, studioCanvas.height);
+            studioCtx.drawImage(uploadedImage, 0, 0, studioCanvas.width, studioCanvas.height);
+            
+            backupCtx.clearRect(0, 0, backupCanvas.width, backupCanvas.height);
+            backupCtx.drawImage(uploadedImage, 0, 0, backupCanvas.width, backupCanvas.height);
+            showAlert("Gambar Direset ke Versi Asli!");
+        }
+
+        // Dynamic Switch Tools
+        function switchTool(tool) {
+            activeTool = tool;
+            
+            const btnChroma = document.getElementById('tool-chroma');
+            const btnErase = document.getElementById('tool-erase');
+            const ctrlChroma = document.getElementById('chroma-instructions');
+            const ctrlErase = document.getElementById('erase-controls');
+
+            // Reset UI states
+            btnChroma.className = "w-full flex items-center justify-between bg-white/5 border border-white/10 text-zinc-400 hover:text-white rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase transition-all";
+            btnErase.className = "w-full flex items-center justify-between bg-white/5 border border-white/10 text-zinc-400 hover:text-white rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase transition-all";
+            ctrlChroma.classList.add('hidden');
+            ctrlErase.classList.add('hidden');
+
+            if (tool === 'chroma') {
+                btnChroma.className = "w-full flex items-center justify-between bg-purple-500/10 border border-purple-500/30 text-white rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase transition-all";
+                ctrlChroma.classList.remove('hidden');
+            } else if (tool === 'erase') {
+                btnErase.className = "w-full flex items-center justify-between bg-purple-500/10 border border-purple-500/30 text-white rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase transition-all";
+                ctrlErase.classList.remove('hidden');
             }
         }
+
+        // Live Chroma Tolerance Range Slider Updates
+        function updateToleranceLabel(val) {
+            chromaTolerance = parseInt(val);
+            document.getElementById('tolerance-val').innerText = `${val}%`;
+        }
+
+        // Live Brush Size Range Slider Updates
+        const brushSlider = document.getElementById('brush-size');
+        if (brushSlider) {
+            brushSlider.addEventListener('input', (e) => {
+                brushSize = parseInt(e.target.value);
+                document.getElementById('brush-size-val').innerText = `${brushSize}px`;
+            });
+        }
+
+        // ── Canvas Drawing / Mouse Events for Eraser & Chroma Key ──
+        function initCanvasEvents() {
+            // Mouse drawing Events
+            studioCanvas.onmousedown = (e) => handleStart(e.clientX, e.clientY);
+            studioCanvas.onmousemove = (e) => handleMove(e.clientX, e.clientY);
+            window.onmouseup = () => handleEnd();
+
+            // Mobile/Tablet Touch Events
+            studioCanvas.ontouchstart = (e) => {
+                if (e.touches.length > 0) {
+                    const touch = e.touches[0];
+                    handleStart(touch.clientX, touch.clientY);
+                }
+            };
+            studioCanvas.ontouchmove = (e) => {
+                if (e.touches.length > 0) {
+                    const touch = e.touches[0];
+                    handleMove(touch.clientX, touch.clientY);
+                }
+            };
+            studioCanvas.ontouchend = () => handleEnd();
+        }
+
+        function handleStart(clientX, clientY) {
+            const rect = studioCanvas.getBoundingClientRect();
+            // Convert to canvas pixel resolution scale
+            const x = ((clientX - rect.left) / rect.width) * studioCanvas.width;
+            const y = ((clientY - rect.top) / rect.height) * studioCanvas.height;
+
+            if (activeTool === 'chroma') {
+                executeChromaKeyAt(x, y);
+            } else if (activeTool === 'erase') {
+                isDrawing = true;
+                studioCtx.globalCompositeOperation = 'destination-out';
+                studioCtx.lineJoin = 'round';
+                studioCtx.lineCap = 'round';
+                studioCtx.strokeStyle = 'rgba(0,0,0,1)';
+                studioCtx.lineWidth = brushSize;
+                
+                studioCtx.beginPath();
+                studioCtx.moveTo(x, y);
+                studioCtx.lineTo(x, y);
+                studioCtx.stroke();
+            }
+        }
+
+        function handleMove(clientX, clientY) {
+            if (!isDrawing || activeTool !== 'erase') return;
+            const rect = studioCanvas.getBoundingClientRect();
+            const x = ((clientX - rect.left) / rect.width) * studioCanvas.width;
+            const y = ((clientY - rect.top) / rect.height) * studioCanvas.height;
+
+            studioCtx.lineTo(x, y);
+            studioCtx.stroke();
+        }
+
+        function handleEnd() {
+            if (isDrawing) {
+                isDrawing = false;
+                // Update backup to match new hand-drawn edits
+                backupCtx.clearRect(0, 0, backupCanvas.width, backupCanvas.height);
+                backupCtx.drawImage(studioCanvas, 0, 0);
+            }
+        }
+
+        // Execute fast, local HTML5 Canvas Chroma Key Pixel Manipulation
+        function executeChromaKeyAt(startX, startY) {
+            const imgData = studioCtx.getImageData(0, 0, studioCanvas.width, studioCanvas.height);
+            const data = imgData.data;
+
+            // Get target RGB values from selected pixel point
+            const targetIdx = (Math.floor(startY) * studioCanvas.width + Math.floor(startX)) * 4;
+            const targetR = data[targetIdx];
+            const targetG = data[targetIdx + 1];
+            const targetB = data[targetIdx + 2];
+
+            // Run through image pixels local-side and clear colors matching tolerance distances
+            const limit = chromaTolerance * 2.5; // Scale range factors to look more natural
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                // Calculate Euclidean distance between colors
+                const dist = Math.sqrt(
+                    (r - targetR) * (r - targetR) +
+                    (g - targetG) * (g - targetG) +
+                    (b - targetB) * (b - targetB)
+                );
+
+                if (dist < limit) {
+                    data[i + 3] = 0; // Turn pixel transparent
+                }
+            }
+
+            // Write modified pixels back to workspace
+            studioCtx.putImageData(imgData, 0, 0);
+            
+            // Sync current state to restoration backups
+            backupCtx.clearRect(0, 0, backupCanvas.width, backupCanvas.height);
+            backupCtx.drawImage(studioCanvas, 0, 0);
+
+            showAlert("Warna Latar Belakang Berhasil Dihapus!");
+        }
+
+        // Bind Downloader handler to extract clean PNG formats
+        document.getElementById('remover-download-btn').onclick = () => {
+            if (!studioCanvas) return;
+            const downloadLink = document.createElement('a');
+            downloadLink.href = studioCanvas.toDataURL('image/png');
+            downloadLink.download = `LambangStudio_NoBG_${Date.now()}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            showAlert("Gambar PNG Berhasil Diunduh!");
+        };
     </script>
 </body>
 </html>
