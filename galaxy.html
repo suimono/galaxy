@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SYNERGY | Cinematic Motion OS</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- MediaPipe dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <!-- Three.js Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/"
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono&display=swap');
+        
+        :root {
+            --accent: #a855f7;
+            --bg: #050507;
+        }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: 'Inter', sans-serif; 
+            background-color: var(--bg);
+            color: #fff;
+        }
+
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.75);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* PIP Styling */
+        #video-pip {
+            transform: scaleX(-1);
+            border-radius: 12px;
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        #output-canvas {
+            transform: scaleX(-1);
+            position: absolute;
+            top: 0; left: 0;
+            width: 120px; height: 90px;
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        /* Animations */
+        .dropdown-content {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 500px;
+            opacity: 1;
+            overflow: hidden;
+        }
+        .dropdown-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0 !important;
+        }
+        
+        .rotate-icon {
+            transition: transform 0.4s ease;
+        }
+        .rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div class="relative z-10 w-full h-full flex flex-col justify-between p-6 pointer-events-none">
+        
+        <!-- TOP: Branding & Menu Navigation -->
+        <div class="flex justify-between items-start">
+            <div class="pointer-events-auto flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <span class="font-bold tracking-tighter text-xl">LAMBANG_STUDIO</span>
+                    <div class="flex gap-2 opacity-50 text-[10px] uppercase font-bold tracking-widest">
+                        <span>WebGL</span>
+                        <span>•</span>
+                        <span>Motion OS</span>
+                    </div>
+                </div>
+                
+                <!-- Back to Menu Button -->
+                <a href="index.html" class="flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/5 transition-all group w-fit">
+                    <i data-lucide="chevron-left" class="w-4 h-4 text-purple-400 group-hover:-translate-x-1 transition-transform"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Kembali ke Menu</span>
+                </a>
+            </div>
+
+            <div class="flex flex-col items-end gap-3 pointer-events-auto">
+                <div id="pip-container" class="glass-panel p-2 rounded-2xl hidden shadow-2xl">
+                    <video id="input-video" class="hidden" autoplay playsinline muted></video>
+                    <div class="relative">
+                        <video id="video-pip" autoplay playsinline muted></video>
+                        <canvas id="output-canvas"></canvas>
+                    </div>
+                    <div class="mt-2 flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-[9px] mono uppercase text-purple-400">
+                            <span id="tracking-status">Awaiting Hand</span>
+                            <span id="fps-counter">30 FPS</span>
+                        </div>
+                        <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                            <div id="gesture-bar" class="bg-purple-500 h-full w-0 transition-all duration-150"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER: Interaction Hints -->
+        <div id="hint-box" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center transition-opacity duration-500 opacity-0">
+            <div class="glass-panel px-6 py-3 rounded-full border border-purple-500/30">
+                <p class="text-xs font-bold uppercase tracking-[0.2em] text-purple-200">Kepalkan Tangan untuk Aktivasi</p>
+            </div>
+        </div>
+
+        <!-- BOTTOM: Controls & Info -->
+        <div class="flex flex-col lg:flex-row justify-between items-end gap-6">
+            
+            <!-- Settings Dropdown Panel -->
+            <div class="glass-panel rounded-[32px] w-full max-w-xs pointer-events-auto overflow-hidden">
+                <!-- Dropdown Header -->
+                <button id="toggle-panel" class="w-full p-6 flex justify-between items-center hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></div>
+                        <span class="text-[10px] font-bold uppercase tracking-[0.2em]">Sistem Kontrol</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="dropdown-icon" class="w-4 h-4 text-slate-400 rotate-icon"></i>
+                </button>
+
+                <!-- Dropdown Content -->
+                <div id="panel-content" class="dropdown-content px-6 pb-8 space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Teks Protokol</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-text" value="SYNERGY" maxlength="12" 
+                                   class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-purple-500/50 transition-all">
+                            <button id="apply-text" class="bg-white text-black px-4 rounded-xl hover:bg-purple-500 hover:text-white transition-all">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Mode Energi</label>
+                            <select id="pattern-select" class="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-2.5 text-[10px] font-bold uppercase outline-none focus:border-purple-500/30">
+                                <option value="text">Typography</option>
+                                <option value="galaxy">Galaxy Spin</option>
+                                <option value="sphere">Quantum</option>
+                                <option value="dna">Helix DNA</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Warna</label>
+                            <div class="flex items-center gap-3 bg-black/40 border border-white/5 rounded-xl p-1 px-3 h-[38px]">
+                                <input type="color" id="color-picker" value="#a855f7" class="w-4 h-4 bg-transparent border-none cursor-pointer rounded-full overflow-hidden">
+                                <span class="text-[9px] mono opacity-50 uppercase" id="hex-label">#A855F7</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="camera-btn" class="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-lg shadow-purple-500/20">
+                        <i data-lucide="focus" class="w-4 h-4"></i>
+                        Mulai Pelacakan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Info -->
+            <div class="flex flex-col items-end gap-4 pointer-events-auto">
+                <div class="text-right space-y-1">
+                    <p class="text-[10px] text-slate-500 max-w-[220px] leading-relaxed uppercase tracking-wider">Ekosistem terdesentralisasi menghubungkan kreator melalui sistem motion sinematik.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- App State ---
+        const AppState = {
+            particleCount: 50000,
+            baseColor: new THREE.Color('#a855f7'),
+            currentPattern: 'text',
+            isHandDetected: false,
+            weightAmbient: 1.0,
+            weightHand: 0.0,
+            weightPattern: 0.0,
+            gestureOpenness: 1.0,
+            targetGestureOpenness: 1.0,
+            isGripped: false,
+            gripBlast: 0.0,
+            targetHandPosition: new THREE.Vector3(0, 0, 0),
+            currentHandPosition: new THREE.Vector3(0, 0, 0),
+            isTransitioning: false,
+            transitionProgress: 1.0,
+            cameraActive: false,
+            textPoints: []
+        };
+
+        // --- DOM Elements ---
+        const container = document.getElementById('canvas-container');
+        const cameraBtn = document.getElementById('camera-btn');
+        const pipContainer = document.getElementById('pip-container');
+        const hintBox = document.getElementById('hint-box');
+        const patternSelect = document.getElementById('pattern-select');
+        const colorPicker = document.getElementById('color-picker');
+        const hexLabel = document.getElementById('hex-label');
+        const customText = document.getElementById('custom-text');
+        const applyText = document.getElementById('apply-text');
+        const gestureBar = document.getElementById('gesture-bar');
+        const trackingStatus = document.getElementById('tracking-status');
+        const videoElementHidden = document.getElementById('input-video');
+        const videoElementPip = document.getElementById('video-pip');
+        const canvasElement = document.getElementById('output-canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const togglePanelBtn = document.getElementById('toggle-panel');
+        const panelContent = document.getElementById('panel-content');
+        const dropdownIcon = document.getElementById('dropdown-icon');
+
+        lucide.createIcons();
+
+        // --- Toggle Logic ---
+        togglePanelBtn.addEventListener('click', () => {
+            panelContent.classList.toggle('collapsed');
+            dropdownIcon.classList.toggle('rotated');
+        });
+
+        // --- Three.js Setup ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050507, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 20;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enablePan = false;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.5;
+        bloomPass.radius = 0.6;
+        composer.addPass(bloomPass);
+
+        const starsGeom = new THREE.BufferGeometry();
+        const starsPts = [];
+        for(let i=0; i<3000; i++) {
+            starsPts.push((Math.random()-0.5)*200, (Math.random()-0.5)*200, (Math.random()-0.5)*150 - 50);
+        }
+        starsGeom.setAttribute('position', new THREE.Float32BufferAttribute(starsPts, 3));
+        const starsMat = new THREE.PointsMaterial({color: 0xa855ff, size: 0.1, transparent: true, opacity: 0.3});
+        const starField = new THREE.Points(starsGeom, starsMat);
+        scene.add(starField);
+
+        function generateTextPoints(text) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            canvas.width = 600; canvas.height = 300;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '900 120px "Inter", Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(text, canvas.width/2, canvas.height/2);
+
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const points = [];
+            for(let y=0; y<canvas.height; y+=3) {
+                for(let x=0; x<canvas.width; x+=3) {
+                    if(data[(y * canvas.width + x) * 4] > 128) {
+                        points.push(new THREE.Vector3((x-canvas.width/2)*0.06, -(y-canvas.height/2)*0.06, (Math.random()-0.5)*0.5));
+                    }
+                }
+            }
+            return points.length ? points : [new THREE.Vector3(0,0,0)];
+        }
+
+        AppState.textPoints = generateTextPoints("SYNERGY");
+
+        const Patterns = {
+            text: (i) => {
+                const pt = AppState.textPoints[i % AppState.textPoints.length];
+                return new THREE.Vector3(pt.x + (Math.random()-0.5)*0.1, pt.y + (Math.random()-0.5)*0.1, pt.z);
+            },
+            sphere: (i, total) => {
+                const phi = Math.acos(-1 + (2 * i) / total);
+                const theta = Math.sqrt(total * Math.PI) * phi;
+                const r = 6 + (Math.random()*0.2);
+                return new THREE.Vector3(r*Math.cos(theta)*Math.sin(phi), r*Math.sin(theta)*Math.sin(phi), r*Math.cos(phi));
+            },
+            galaxy: (i) => {
+                const arms = 3;
+                const r = Math.random() * 10;
+                const armAngle = (Math.floor(Math.random() * arms) / arms) * Math.PI * 2;
+                const spin = r * 0.4;
+                const finalAngle = armAngle + spin + (Math.random()-0.5)*0.5;
+                return new THREE.Vector3(Math.cos(finalAngle)*r, (Math.random()-0.5)*(1.0-r/10)*3.0, Math.sin(finalAngle)*r);
+            },
+            dna: (i) => {
+                const y = (Math.random() - 0.5) * 18;
+                const phase = y * 0.8;
+                const strand = Math.random() > 0.5 ? 0 : Math.PI;
+                const r = 3 + (Math.random()*0.2);
+                return new THREE.Vector3(Math.cos(phase+strand)*r, y, Math.sin(phase+strand)*r);
+            }
+        };
+
+        let particleGeom = new THREE.BufferGeometry();
+        let positions = new Float32Array(AppState.particleCount * 3);
+        let targets = new Float32Array(AppState.particleCount * 3);
+        let randoms = new Float32Array(AppState.particleCount * 3);
+        let handPositions = new Float32Array(AppState.particleCount * 3);
+        let ambientPositions = new Float32Array(AppState.particleCount * 3);
+        const planetIDs = new Float32Array(AppState.particleCount);
+
+        for(let i=0; i<AppState.particleCount; i++) {
+            const pt = Patterns.text(i, AppState.particleCount);
+            positions[i*3]=pt.x; positions[i*3+1]=pt.y; positions[i*3+2]=pt.z;
+            targets[i*3]=pt.x; targets[i*3+1]=pt.y; targets[i*3+2]=pt.z;
+            
+            const u = Math.random()*Math.PI*2;
+            const v = Math.acos(2*Math.random()-1);
+            randoms[i*3]=Math.sin(v)*Math.cos(u); randoms[i*3+1]=Math.sin(v)*Math.sin(u); randoms[i*3+2]=Math.cos(v);
+
+            planetIDs[i] = i%2 === 0 ? -1.0 : 1.0;
+            const rA = 5 + Math.random()*15;
+            const tA = Math.random()*Math.PI*2;
+            const pA = Math.acos(2*Math.random()-1);
+            ambientPositions[i*3]=rA*Math.sin(pA)*Math.cos(tA); ambientPositions[i*3+1]=rA*Math.cos(pA); ambientPositions[i*3+2]=rA*Math.sin(pA)*Math.sin(tA);
+        }
+
+        particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeom.setAttribute('aTarget', new THREE.BufferAttribute(targets, 3));
+        particleGeom.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
+        particleGeom.setAttribute('aHandPos', new THREE.BufferAttribute(handPositions, 3));
+        particleGeom.setAttribute('aAmbientPos', new THREE.BufferAttribute(ambientPositions, 3));
+        particleGeom.setAttribute('aPlanetID', new THREE.BufferAttribute(planetIDs, 1));
+
+        const particleMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uColor: { value: AppState.baseColor },
+                uWeightAmbient: { value: 1.0 },
+                uWeightHand: { value: 0.0 },
+                uWeightPattern: { value: 0.0 },
+                uTransition: { value: 1.0 },
+                uGripBlast: { value: 0.0 },
+                uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+            },
+            vertexShader: `
+                uniform float uTime;
+                uniform float uWeightAmbient;
+                uniform float uWeightHand;
+                uniform float uWeightPattern;
+                uniform float uTransition;
+                uniform float uGripBlast;
+                uniform float uPixelRatio;
+
+                attribute vec3 aTarget;
+                attribute vec3 aRandom;
+                attribute vec3 aHandPos;
+                attribute vec3 aAmbientPos;
+                attribute float aPlanetID;
+
+                varying float vAlpha;
+                varying float vGrip;
+
+                void main() {
+                    vGrip = uGripBlast;
+                    vec3 morphedPattern = mix(position, aTarget, uTransition);
+                    vec3 patternPos = morphedPattern + (aRandom * uGripBlast * 5.0);
+                    patternPos.x += sin(uTime * 2.0 + patternPos.y) * 0.1;
+                    vec3 handPos = aHandPos + (aRandom * 0.05);
+                    vec3 amb = aAmbientPos;
+                    float spin = uTime * 0.5 * (1.0 / (length(amb.xz) + 1.0)) * aPlanetID;
+                    float s = sin(spin); float c = cos(spin);
+                    amb = vec3(amb.x * c - amb.z * s, amb.y, amb.x * s + amb.z * c);
+                    vec3 orbit = vec3(cos(uTime * 0.2) * 12.0 * aPlanetID, sin(uTime * 0.5) * 2.0, sin(uTime * 0.2) * 6.0 * aPlanetID);
+                    vec3 ambientPos = amb + orbit;
+
+                    vec3 finalPos = (ambientPos * uWeightAmbient) + (handPos * uWeightHand) + (patternPos * uWeightPattern);
+                    
+                    vec4 mvPos = modelViewMatrix * vec4(finalPos, 1.0);
+                    gl_PointSize = (14.0 * uPixelRatio) / -mvPos.z * (1.0 + uGripBlast * 3.0);
+                    vAlpha = clamp(1.2 - (length(finalPos) * 0.05), 0.1, 1.0);
+                    gl_Position = projectionMatrix * mvPos;
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 uColor;
+                varying float vAlpha;
+                varying float vGrip;
+                void main() {
+                    float dist = length(gl_PointCoord - vec2(0.5));
+                    if(dist > 0.5) discard;
+                    float soft = pow(1.0 - dist * 2.0, 1.5);
+                    vec3 color = mix(uColor, vec3(1.0, 0.9, 1.0), vGrip * 0.8);
+                    gl_FragColor = vec4(color, soft * vAlpha);
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+
+        const points = new THREE.Points(particleGeom, particleMat);
+        scene.add(points);
+
+        function changePattern(name) {
+            AppState.currentPattern = name;
+            AppState.isTransitioning = true;
+            AppState.transitionProgress = 0.0;
+            const targetAttr = particleGeom.attributes.aTarget;
+            for(let i=0; i<AppState.particleCount; i++) {
+                const pt = Patterns[name](i, AppState.particleCount);
+                targetAttr.setXYZ(i, pt.x, pt.y, pt.z);
+            }
+            targetAttr.needsUpdate = true;
+        }
+
+        function calculateHandOpenness(landmarks) {
+            const wrist = landmarks[0];
+            const tips = [8, 12, 16, 20];
+            let total = 0;
+            tips.forEach(idx => {
+                const tip = landmarks[idx];
+                total += Math.hypot(wrist.x - tip.x, wrist.y - tip.y);
+            });
+            return THREE.MathUtils.smoothstep(total / 4, 0.18, 0.48);
+        }
+
+        let handsMP;
+        async function startCamera() {
+            if(AppState.cameraActive) return;
+            cameraBtn.innerHTML = "Inisialisasi...";
+            
+            handsMP = new window.Hands({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+            handsMP.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+            handsMP.onResults(onResults);
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                videoElementHidden.srcObject = stream;
+                videoElementPip.srcObject = stream;
+                const cameraMP = new window.Camera(videoElementHidden, {
+                    onFrame: async () => { await handsMP.send({image: videoElementHidden}); },
+                    width: 320, height: 240
+                });
+                cameraMP.start();
+                AppState.cameraActive = true;
+                pipContainer.classList.remove('hidden');
+                cameraBtn.innerHTML = "Pelacakan Aktif";
+                cameraBtn.classList.replace('bg-purple-600', 'bg-green-600');
+            } catch(e) {
+                cameraBtn.innerHTML = "Akses Kamera Ditolak";
+                cameraBtn.classList.replace('bg-purple-600', 'bg-red-600');
+            }
+        }
+
+        function onResults(results) {
+            canvasElement.width = 120; canvasElement.height = 90;
+            canvasCtx.clearRect(0,0,120,90);
+            if(results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                AppState.isHandDetected = true;
+                trackingStatus.innerText = "Terkunci";
+                trackingStatus.classList.add('text-green-400');
+                
+                const landmarks = results.multiHandLandmarks[0];
+                AppState.targetGestureOpenness = calculateHandOpenness(landmarks);
+
+                const vFov = camera.fov * Math.PI / 180;
+                const vH = 2 * Math.tan(vFov/2) * camera.position.z;
+                const vW = vH * camera.aspect;
+
+                const palm = landmarks[9];
+                AppState.targetHandPosition.set((0.5-palm.x)*vW, -(palm.y-0.5)*vH, 0);
+
+                const handPosAttr = particleGeom.attributes.aHandPos;
+                const connections = window.HAND_CONNECTIONS || [];
+                for(let i=0; i<AppState.particleCount; i++) {
+                    const conn = connections[i % connections.length] || [0,0];
+                    const s = landmarks[conn[0]]; const e = landmarks[conn[1]];
+                    const t = (i%10)/10;
+                    const px = s.x + (e.x - s.x) * t;
+                    const py = s.y + (e.y - s.y) * t;
+                    const pz = s.z + (e.z - s.z) * t;
+                    handPosAttr.setXYZ(i, (0.5-px)*vW - AppState.targetHandPosition.x, -(py-0.5)*vH - AppState.targetHandPosition.y, -pz*vW);
+                }
+                handPosAttr.needsUpdate = true;
+                window.drawConnectors(canvasCtx, landmarks, window.HAND_CONNECTIONS, {color: '#a855f7', lineWidth: 2});
+            } else {
+                AppState.isHandDetected = false;
+                trackingStatus.innerText = "Mencari...";
+                trackingStatus.classList.remove('text-green-400');
+                AppState.targetGestureOpenness = 1.0;
+            }
+        }
+
+        cameraBtn.addEventListener('click', startCamera);
+        patternSelect.addEventListener('change', (e) => changePattern(e.target.value));
+        colorPicker.addEventListener('input', (e) => {
+            AppState.baseColor.set(e.target.value);
+            hexLabel.innerText = e.target.value.toUpperCase();
+            particleMat.uniforms.uColor.value = AppState.baseColor;
+        });
+        applyText.addEventListener('click', () => {
+            AppState.textPoints = generateTextPoints(customText.value || "SYNERGY");
+            changePattern('text');
+            patternSelect.value = 'text';
+        });
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+            
+            controls.update();
+            particleMat.uniforms.uTime.value = time;
+
+            if(AppState.isTransitioning) {
+                AppState.transitionProgress += delta * 2;
+                if(AppState.transitionProgress >= 1) AppState.isTransitioning = false;
+                particleMat.uniforms.uTransition.value = AppState.transitionProgress;
+            }
+
+            AppState.currentHandPosition.lerp(AppState.targetHandPosition, 0.1);
+            points.position.copy(AppState.currentHandPosition);
+
+            AppState.gestureOpenness = THREE.MathUtils.lerp(AppState.gestureOpenness, AppState.targetGestureOpenness, 0.2);
+            gestureBar.style.width = `${AppState.gestureOpenness * 100}%`;
+
+            const wasGripped = AppState.isGripped;
+            AppState.isGripped = AppState.isHandDetected && AppState.gestureOpenness < 0.4;
+            if(AppState.isGripped && !wasGripped) AppState.gripBlast = 1.0;
+            AppState.gripBlast = THREE.MathUtils.lerp(AppState.gripBlast, 0.0, 0.1);
+
+            let tA = 0, tH = 0, tP = 0;
+            if(!AppState.isHandDetected) tA = 1;
+            else if(AppState.isGripped) tP = 1;
+            else tH = 1;
+
+            AppState.weightAmbient = THREE.MathUtils.lerp(AppState.weightAmbient, tA, 0.1);
+            AppState.weightHand = THREE.MathUtils.lerp(AppState.weightHand, tH, 0.1);
+            AppState.weightPattern = THREE.MathUtils.lerp(AppState.weightPattern, tP, 0.1);
+
+            particleMat.uniforms.uWeightAmbient.value = AppState.weightAmbient;
+            particleMat.uniforms.uWeightHand.value = AppState.weightHand;
+            particleMat.uniforms.uWeightPattern.value = AppState.weightPattern;
+            particleMat.uniforms.uGripBlast.value = AppState.gripBlast;
+
+            hintBox.style.opacity = (AppState.isHandDetected && !AppState.isGripped) ? "1" : "0";
+            starField.rotation.y += delta * 0.05;
+
+            composer.render();
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
