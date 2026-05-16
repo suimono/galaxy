@@ -2,8 +2,10 @@
 <html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNREAL_STUDIO | Digital Architects</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>LAMBANG_STUDIO | Digital Architects</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -17,7 +19,16 @@
             --text-muted: rgba(255, 255, 255, 0.4);
             --glass-border: rgba(255, 255, 255, 0.08);
             --glass-bg: rgba(255, 255, 255, 0.03);
+            /* safe area insets for notch/island devices */
+            --sat: env(safe-area-inset-top, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
         }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; }
 
         body {
             margin: 0;
@@ -26,6 +37,9 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* prevent horizontal scroll on mobile */
+            max-width: 100vw;
         }
 
         .font-display { font-family: 'Space Grotesk', sans-serif; }
@@ -43,8 +57,9 @@
             position: fixed;
             inset: 0;
             z-index: 0;
-            background-image: linear-gradient(var(--glass-border) 1px, transparent 1px),
-                              linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-image: 
+                linear-gradient(var(--glass-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
             background-size: 60px 60px;
             mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
             -webkit-mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
@@ -54,71 +69,113 @@
         .text-stroke { -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
         .text-stroke-footer { -webkit-text-stroke: 1px rgba(255,255,255,0.4); }
 
-        ::-webkit-scrollbar { width: 6px; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #030303; }
         ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
+        /* ── Mobile menu clip ── */
         #mobile-overlay {
-            clip-path: circle(0% at 90% 10%);
+            clip-path: circle(0% at 92% 5%);
             transition: clip-path 0.8s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.8s;
         }
         #mobile-overlay.open {
-            clip-path: circle(150% at 90% 10%);
+            clip-path: circle(150% at 92% 5%);
             opacity: 1;
         }
 
+        /* ── Marquee ── */
         .marquee-animation {
             display: flex;
             gap: 5rem;
             animation: marquee 25s linear infinite;
+            will-change: transform;
         }
-
         @keyframes marquee {
-            0% { transform: translateX(0); }
+            0%   { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
 
+        /* ── Scroll reveal ── */
         .reveal-on-scroll {
             opacity: 0;
             transform: translateY(30px);
-            transition: all 0.8s ease-out;
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
-
         .reveal-on-scroll.visible {
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* Modal specific animation */
+        /* ── Modal ── */
         .modal-blur {
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
+
+        /* ── Letter scatter ── */
         .line {
-  display: block;
-  transition: all 0.6s ease;
-}
+            display: block;
+            transition: all 0.6s ease;
+        }
 
-.group:hover .line {
-  filter: blur(1px);
-  transform: scale(1.02);
-}
+        /* ── Fluid hero type ── */
+        .hero-title {
+            font-size: clamp(2.8rem, 14vw, 12rem);
+            line-height: 0.9;
+            letter-spacing: -0.06em;
+        }
 
-/* particle pieces */
-.particle {
-  position: absolute;
-  font-weight: 900;
-  pointer-events: none;
-  color: white;
-  opacity: 0;
-  transform: translate(0,0);
-  transition: all 1s ease;
-}
+        /* ── Touch-friendly tap targets ── */
+        a, button { -webkit-tap-highlight-color: transparent; }
 
-.group.active .particle {
-  opacity: 1;
-}
+        /* ── Project card full-width on small screens ── */
+        @media (max-width: 767px) {
+            .project-card .md\:grid-cols-12 { grid-template-columns: 1fr; }
+            .project-grid-order-1 { order: 1 !important; }
+            .project-grid-order-2 { order: 2 !important; }
+        }
+
+        /* ── Prevent body scroll when modal open ── */
+        body.no-scroll { overflow: hidden; }
+
+        /* ── Navbar safe area padding ── */
+        #navbar {
+            padding-top: max(1.5rem, calc(1rem + var(--sat)));
+            padding-left: var(--sal);
+            padding-right: var(--sar);
+        }
+
+        /* ── Footer safe area padding ── */
+        footer {
+            padding-bottom: max(4rem, calc(1rem + var(--sab)));
+            padding-left: max(1.5rem, var(--sal));
+            padding-right: max(1.5rem, var(--sar));
+        }
+
+        /* ── Showreel / modal safe zones ── */
+        #showreel-overlay, #project-modal, #contact-modal {
+            padding-top: var(--sat);
+            padding-bottom: var(--sab);
+        }
+
+        /* ── iOS momentum scrolling ── */
+        .overflow-y-auto, .overflow-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ── Bento card on mobile ── */
+        @media (max-width: 767px) {
+            .bento-card { padding: 1.5rem; }
+            .bento-headline { font-size: clamp(1.75rem, 8vw, 3rem); }
+        }
+
+        /* ── Circular CTA scale fix mobile ── */
+        @media (max-width: 480px) {
+            .play-btn { width: 5rem; height: 5rem; }
+            .play-btn svg { transform: scale(0.75); }
+        }
     </style>
 </head>
 <body class="bg-[#030303] text-white selection:bg-purple-500/30 min-h-screen">
@@ -126,63 +183,58 @@
     <div class="noise-bg"></div>
     <div class="grid-bg"></div>
 
-    <nav id="navbar" class="fixed left-0 top-0 z-[100] w-full transition-all duration-700 py-8">
-        <div id="nav-container" class="mx-auto flex max-w-[1400px] items-center justify-between px-6 md:px-12 transition-all duration-500">
-            <div class="font-display text-xl font-bold tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
+    <!-- ── NAV ── -->
+    <nav id="navbar" class="fixed left-0 top-0 z-[100] w-full transition-all duration-700">
+        <div id="nav-container" class="mx-auto flex max-w-[1400px] items-center justify-between px-5 sm:px-8 md:px-12 transition-all duration-500 py-4 sm:py-5">
+            <div class="font-display text-lg sm:text-xl font-bold tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
                 LAMBANG<span class="text-purple-500">_</span>STUDIO
             </div>
 
-            <div class="flex items-center gap-8">
-                <div class="hidden items-center gap-10 md:flex">
-                    <a href="#work" class="group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-white">
+            <div class="flex items-center gap-6 sm:gap-8">
+                <!-- Desktop links -->
+                <div class="hidden items-center gap-8 md:flex">
+                    <a href="#work"    class="nav-link group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 hover:text-white transition-colors">
                         <span class="relative z-10">Work</span>
                         <span class="absolute -bottom-1 left-0 h-[1px] w-0 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
                     </a>
-                    <a href="#labs" class="group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-white">
+                    <a href="#labs"    class="nav-link group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 hover:text-white transition-colors">
                         <span class="relative z-10">Labs</span>
                         <span class="absolute -bottom-1 left-0 h-[1px] w-0 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
                     </a>
-                    <a href="#contact" class="group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-white">
+                    <a href="#contact" class="nav-link group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 hover:text-white transition-colors">
                         <span class="relative z-10">Contact</span>
                         <span class="absolute -bottom-1 left-0 h-[1px] w-0 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
                     </a>
-                    
                 </div>
-                
-                <button id="menu-toggle"
-    class="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-all duration-300 hover:border-purple-500/50 hover:bg-white/10">
 
-    <div id="menu-icon-wrapper"
-        class="relative flex h-[18px] w-[18px] items-center justify-center transition-transform duration-500">
-
-        <!-- MENU ICON -->
-        <i data-lucide="menu"
-            class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-100 scale-100"
-            id="icon-menu"></i>
-
-        <!-- CLOSE ICON -->
-        <i data-lucide="x"
-            class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-0 scale-75"
-            id="icon-close"></i>
-
-    </div>
-</button>
+                <!-- Hamburger -->
+                <button id="menu-toggle" aria-label="Toggle menu"
+                    class="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-all duration-300 hover:border-purple-500/50 hover:bg-white/10">
+                    <div id="menu-icon-wrapper" class="relative flex h-[18px] w-[18px] items-center justify-center transition-transform duration-500">
+                        <i data-lucide="menu" class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-100 scale-100" id="icon-menu"></i>
+                        <i data-lucide="x"    class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-0  scale-75" id="icon-close"></i>
+                    </div>
+                </button>
             </div>
         </div>
     </nav>
 
-    <div id="mobile-overlay" class="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-3xl opacity-0 pointer-events-none">
-        <div class="flex flex-col items-center gap-8 text-center">
-            <a href="#work" onclick="toggleMenu()" class="font-display text-4xl sm:text-6xl font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">WORKS</a>
-            <a href="#labs" onclick="toggleMenu()" class="font-display text-4xl sm:text-6xl font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">LABS</a>
-            <a href="#contact" onclick="toggleMenu()" class="font-display text-4xl sm:text-6xl font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">CONTACT</a>
-        </div>
+    <!-- ── MOBILE MENU OVERLAY ── -->
+    <div id="mobile-overlay" class="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-black/95 backdrop-blur-3xl opacity-0 pointer-events-none gap-6 sm:gap-8">
+        <a href="#work"    onclick="toggleMenu()" class="font-display text-[min(12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">WORKS</a>
+        <a href="#labs"    onclick="toggleMenu()" class="font-display text-[min(12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">LABS</a>
+        <a href="#contact" onclick="toggleMenu()" class="font-display text-[min(12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">CONTACT</a>
     </div>
 
+    <!-- ── MAIN ── -->
     <main class="relative z-10">
-        <section class="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-32 pb-20">
+
+        <!-- HERO -->
+        <section class="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-5 sm:px-8 pt-28 sm:pt-32 pb-16 sm:pb-20">
+            <!-- BG Video -->
             <div class="absolute inset-0 z-0 overflow-hidden">
-                <video autoPlay muted loop playsInline preload="auto" class="absolute inset-0 h-full w-full object-cover opacity-70 brightness-90 contrast-125">
+                <video autoplay muted loop playsinline preload="auto"
+                       class="absolute inset-0 h-full w-full object-cover opacity-70 brightness-90 contrast-125">
                     <source src="https://stream.mux.com/sDz01Os9GN02ltJvgikeaUvZWsLRiR5FX5GuadCRkQc7E.m3u8" type="video/mp4" />
                 </video>
                 <div class="absolute inset-0 bg-black/45"></div>
@@ -191,96 +243,99 @@
             </div>
 
             <div id="hero-content" class="relative z-10 w-full max-w-[1400px] transition-all duration-1000">
-                
                 <div class="group relative flex flex-col items-center text-center">
+                    <h1 id="galaxyTitle" class="font-display hero-title font-black pointer-events-none select-none">
+                        <span class="line block text-white">UNREAL</span>
+                        <span class="line block italic text-transparent text-stroke"></span>
+                    </h1>
+                </div>
 
-    <h1 id="galaxyTitle"
-        class="font-display pointer-events-none select-none text-[11vw] font-black leading-[0.9] tracking-tighter md:text-[13vw]">
+                <!-- Sub-row -->
+                <div class="mt-8 sm:mt-12 flex flex-col items-center gap-8 sm:gap-12 md:flex-row md:items-center md:justify-between md:w-full md:px-12">
+                    <p class="max-w-[280px] sm:max-w-[320px] text-[10px] sm:text-[11px] leading-relaxed uppercase tracking-[0.2em] text-white/40 text-center md:text-left">
+                        We craft high-end digital solutions at the intersection of aesthetics and code.
+                    </p>
 
-        <span class="line block text-white">UNREAL</span>
-        <span class="line block italic text-transparent text-stroke"></span>
-
-    </h1>
-
-</div>
-
-
-
-                    <div class="mt-12 flex flex-col items-center gap-12 md:flex-row md:items-center md:justify-between md:w-full md:px-12">
-                        <p class="max-w-[320px] text-[11px] leading-relaxed uppercase tracking-[0.2em] text-white/40 text-center md:text-left">
-                            We craft high-end digital solutions at the intersection of aesthetics and code.
-                        </p>
-
-                        <button onclick="openShowreel()" class="group relative flex h-28 w-28 items-center justify-center rounded-full bg-white text-black transition-all hover:bg-purple-600 hover:text-white active:scale-95">
-                            <div class="absolute inset-0 animate-[spin_12s_linear_infinite] text-[8px] font-bold uppercase tracking-widest p-2">
-                                <svg viewBox="0 0 100 100" class="h-full w-full overflow-visible">
-                                    <path id="circlePath" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="none" />
-                                    <text class="fill-current text-[9px] font-semibold">
-                                        <textPath href="#circlePath">VIEW OUR SHOWREEL • PLAY NOW • </textPath>
-                                    </text>
-                                </svg>
-                            </div>
-                            <i data-lucide="play" class="w-5 h-5 fill-current"></i>
-                        </button>
-                    </div>
+                    <!-- Play button -->
+                    <button onclick="openShowreel()" aria-label="View showreel"
+                        class="play-btn group relative flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-full bg-white text-black transition-all hover:bg-purple-600 hover:text-white active:scale-95">
+                        <div class="absolute inset-0 animate-[spin_12s_linear_infinite] text-[8px] font-bold uppercase tracking-widest p-2">
+                            <svg viewBox="0 0 100 100" class="h-full w-full overflow-visible">
+                                <path id="circlePath" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="none" />
+                                <text class="fill-current text-[9px] font-semibold">
+                                    <textPath href="#circlePath">VIEW OUR SHOWREEL • PLAY NOW • </textPath>
+                                </text>
+                            </svg>
+                        </div>
+                        <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+                    </button>
                 </div>
             </div>
         </section>
 
-        <div class="relative overflow-hidden py-16 border-y border-white/5 bg-white/[0.01]">
+        <!-- MARQUEE TOP -->
+        <div class="relative overflow-hidden py-12 sm:py-16 border-y border-white/5 bg-white/[0.01]">
             <div class="marquee-animation">
-                <div class="flex items-center gap-20">
-                    <span class="font-display text-3xl font-bold tracking-tighter opacity-10 uppercase">Digital Architects</span>
-                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
-                    <span class="font-display text-3xl font-bold tracking-tighter text-white/40 uppercase">Crafting Unreality</span>
-                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
+                <div class="flex items-center gap-16 sm:gap-20 shrink-0">
+                    <span class="font-display text-2xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                    <i data-lucide="plus" class="text-purple-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0"></i>
+                    <span class="font-display text-2xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                    <i data-lucide="plus" class="text-purple-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0"></i>
                 </div>
-                <!-- Duplicate for seamless loop -->
-                <div class="flex items-center gap-20">
-                    <span class="font-display text-3xl font-bold tracking-tighter opacity-10 uppercase">Digital Architects</span>
-                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
-                    <span class="font-display text-3xl font-bold tracking-tighter text-white/40 uppercase">Crafting Unreality</span>
-                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
+                <div class="flex items-center gap-16 sm:gap-20 shrink-0">
+                    <span class="font-display text-2xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                    <i data-lucide="plus" class="text-purple-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0"></i>
+                    <span class="font-display text-2xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                    <i data-lucide="plus" class="text-purple-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0"></i>
                 </div>
             </div>
         </div>
 
-        <section id="work" class="relative mx-auto max-w-[1500px] overflow-hidden px-6 py-28 md:px-12 md:py-40">
+        <!-- ── WORK ── -->
+        <section id="work" class="relative mx-auto max-w-[1500px] overflow-hidden px-5 sm:px-8 md:px-12 py-20 sm:py-28 md:py-40">
             <div class="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-purple-500/10 blur-[140px]"></div>
 
-            <div class="mb-24 flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
+            <!-- Section header -->
+            <div class="mb-16 sm:mb-24 flex flex-col gap-8 sm:gap-10 md:flex-row md:items-end md:justify-between">
                 <div class="reveal-on-scroll max-w-3xl">
-                    <p class="mb-5 text-[10px] font-bold uppercase tracking-[0.6em] text-purple-400">Portfolio Index 2026</p>
-                    <h2 class="font-display text-5xl font-black leading-[0.9] tracking-[-0.06em] md:text-8xl">
+                    <p class="mb-4 sm:mb-5 text-[10px] font-bold uppercase tracking-[0.6em] text-purple-400">Portfolio Index 2026</p>
+                    <h2 class="font-display font-black leading-[0.9] tracking-[-0.06em]"
+                        style="font-size: clamp(2.5rem, 8vw, 6rem);">
                         LAMBANG <br />
                         <span class="text-white/30">EXPERIENCES</span>
                     </h2>
                 </div>
-                <p class="reveal-on-scroll max-w-sm text-xs uppercase leading-loose tracking-[0.25em] text-white/40">
+                <p class="reveal-on-scroll max-w-sm text-[11px] uppercase leading-loose tracking-[0.25em] text-white/40">
                     A curated collection of immersive digital experiences blending motion, interaction, and futuristic aesthetics.
                 </p>
             </div>
 
-            <div class="space-y-16">
+            <!-- Projects -->
+            <div class="space-y-10 sm:space-y-16">
+
                 <!-- PROJECT 01 -->
-                <div class="project-card group relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition-all duration-700 hover:border-purple-500/30 hover:bg-white/[0.05]">
-                    <div class="grid grid-cols-1 items-center gap-14 md:grid-cols-12">
-                        <div class="relative overflow-hidden rounded-[2rem] md:col-span-7 aspect-[4/3] bg-black">
+                <div class="project-card group relative overflow-hidden rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5 backdrop-blur-xl transition-all duration-700 hover:border-purple-500/30 hover:bg-white/[0.05]">
+                    <div class="grid grid-cols-1 md:grid-cols-12 items-center gap-8 sm:gap-14">
+                        <!-- Video -->
+                        <div class="relative overflow-hidden rounded-[1.2rem] sm:rounded-[2rem] md:col-span-7 aspect-[4/3] bg-black">
                             <video autoplay muted loop playsinline class="h-full w-full object-cover transition-all duration-[1500ms] group-hover:scale-105">
                                 <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_055001_8e16d972-3b2b-441c-86ad-2901a54682f9.mp4" type="video/mp4">
                             </video>
                             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                         </div>
-                        <div class="relative z-10 md:col-span-5">
-                            <div class="mb-8 flex flex-wrap gap-3">
-                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">WebGL</span>
-                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Motion</span>
+                        <!-- Text -->
+                        <div class="relative z-10 md:col-span-5 px-1 sm:px-0">
+                            <div class="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3">
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">WebGL</span>
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Motion</span>
                             </div>
-                            <h3 class="mb-6 font-display text-5xl font-black tracking-[-0.05em] transition-all duration-500 group-hover:translate-x-2 group-hover:text-purple-400 md:text-7xl">SYNERGY</h3>
-                            <p class="mb-10 max-w-md text-sm leading-relaxed text-white/55">A decentralized ecosystem connecting creators through cinematic motion systems.</p>
-                            <button onclick="openProject('Synergy', 'Exploring the boundaries of decentralized creativity.')" class="group/btn flex items-center gap-5 text-[11px] font-bold uppercase tracking-[0.35em] text-white hover:text-purple-300">
+                            <h3 class="mb-4 sm:mb-6 font-display font-black tracking-[-0.05em] transition-all duration-500 group-hover:text-purple-400 md:group-hover:translate-x-2"
+                                style="font-size: clamp(2.5rem, 8vw, 5rem);">SYNERGY</h3>
+                            <p class="mb-8 sm:mb-10 max-w-md text-sm leading-relaxed text-white/55">A decentralized ecosystem connecting creators through cinematic motion systems.</p>
+                            <button onclick="openProject('Synergy', 'Exploring the boundaries of decentralized creativity.')"
+                                class="group/btn flex items-center gap-4 sm:gap-5 text-[11px] font-bold uppercase tracking-[0.35em] text-white hover:text-purple-300">
                                 Explore Case Study
-                                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/btn:translate-x-2">
+                                <span class="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/btn:translate-x-2">
                                     <i data-lucide="arrow-right" class="h-4 w-4"></i>
                                 </span>
                             </button>
@@ -289,404 +344,378 @@
                 </div>
 
                 <!-- PROJECT 02 -->
-                <div class="project-card group relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition-all duration-700 hover:border-purple-500/30 hover:bg-white/[0.05]">
-                    <div class="grid grid-cols-1 items-center gap-14 md:grid-cols-12">
-                        <div class="relative order-2 md:order-1 md:col-span-5">
-                            <div class="mb-8 flex flex-wrap gap-3">
-                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Three.js</span>
-                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Spatial</span>
+                <div class="project-card group relative overflow-hidden rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5 backdrop-blur-xl transition-all duration-700 hover:border-purple-500/30 hover:bg-white/[0.05]">
+                    <div class="grid grid-cols-1 md:grid-cols-12 items-center gap-8 sm:gap-14">
+                        <!-- Text (order-2 on mobile, order-1 on desktop) -->
+                        <div class="relative order-2 md:order-1 md:col-span-5 px-1 sm:px-0">
+                            <div class="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3">
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Three.js</span>
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1.5 sm:px-4 sm:py-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Spatial</span>
                             </div>
-                            <h3 class="mb-6 font-display text-5xl font-black tracking-[-0.05em] transition-all duration-500 group-hover:-translate-x-2 group-hover:text-purple-400 md:text-7xl">ETHEREAL</h3>
-                            <p class="mb-10 max-w-md text-sm leading-relaxed text-white/55">Redefining immersive interfaces using futuristic motion systems and generative visuals.</p>
-                            <button onclick="openProject('Ethereal', 'Generative art meets spatial interaction.')" class="group/btn flex items-center gap-5 text-[11px] font-bold uppercase tracking-[0.35em] text-white hover:text-purple-300">
+                            <h3 class="mb-4 sm:mb-6 font-display font-black tracking-[-0.05em] transition-all duration-500 group-hover:text-purple-400 md:group-hover:-translate-x-2"
+                                style="font-size: clamp(2.5rem, 8vw, 5rem);">ETHEREAL</h3>
+                            <p class="mb-8 sm:mb-10 max-w-md text-sm leading-relaxed text-white/55">Redefining immersive interfaces using futuristic motion systems and generative visuals.</p>
+                            <button onclick="openProject('Ethereal', 'Generative art meets spatial interaction.')"
+                                class="group/btn flex items-center gap-4 sm:gap-5 text-[11px] font-bold uppercase tracking-[0.35em] text-white hover:text-purple-300">
                                 Explore Case Study
-                                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/btn:-translate-x-2">
+                                <span class="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/btn:-translate-x-2">
                                     <i data-lucide="arrow-right" class="h-4 w-4"></i>
                                 </span>
                             </button>
                         </div>
-                        <div class="relative order-1 md:order-2 overflow-hidden rounded-[2rem] md:col-span-7 aspect-[4/3] bg-black">
+                        <!-- Video (order-1 on mobile, order-2 on desktop) -->
+                        <div class="relative order-1 md:order-2 overflow-hidden rounded-[1.2rem] sm:rounded-[2rem] md:col-span-7 aspect-[4/3] bg-black">
                             <video autoplay muted loop playsinline class="h-full w-full object-cover transition-all duration-[1500ms] group-hover:scale-105">
                                 <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260429_115139_0fc6bd3d-3631-4d26-ab9b-28293887dcc9.mp4" type="video/mp4">
                             </video>
                         </div>
                     </div>
                 </div>
+
             </div>
         </section>
 
-<section id="labs" class="relative mx-auto max-w-[1500px] px-6 py-24 md:px-12 md:py-36 overflow-hidden bg-[#030303] text-white">
+        <!-- ── LABS ── -->
+        <section id="labs" class="relative mx-auto max-w-[1500px] px-5 sm:px-8 md:px-12 py-20 sm:py-28 md:py-36 overflow-hidden bg-[#030303] text-white">
+            <!-- Glows -->
+            <div class="pointer-events-none absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-to-b from-purple-600/20 to-blue-600/0 blur-[140px]"></div>
+            <div class="pointer-events-none absolute -left-20 top-1/3 h-[300px] w-[300px] rounded-full bg-purple-500/10 blur-[100px]"></div>
 
-    <!-- Ambient Background Glows -->
-    <div class="pointer-events-none absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-to-b from-purple-600/20 to-blue-600/0 blur-[140px]"></div>
-    <div class="pointer-events-none absolute -left-20 top-1/3 h-[300px] w-[300px] rounded-full bg-purple-500/10 blur-[100px]"></div>
-
-    <!-- SECTION HEADER -->
-    <div class="mb-16 text-center relative z-10">
-        <p class="inline-block text-[11px] font-bold uppercase tracking-[0.6em] text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 backdrop-blur-md pl-[0.6em]">
-            Creative Studio
-        </p>
-        <h2 class="mt-6 font-display text-5xl font-black leading-none md:text-8xl tracking-tighter uppercase">
-            LAMBANG <br />
-            <span class="bg-gradient-to-r from-white via-white/70 to-white/30 bg-clip-text text-transparent">DIGITAL LAB</span>
-        </h2>
-    </div>
-
-    <!-- MARQUEE (TOP) -->
-    <div class="relative overflow-hidden py-6 border-y border-white/[0.05] bg-white/[0.002] mb-16 [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
-        <div class="marquee-animation flex w-max items-center gap-20 animate-marquee">
-            <!-- Set 1 -->
-            <div class="flex items-center gap-20">
-                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
-                    Digital Architects
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
-                    Crafting Unreality
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-            </div>
-            <!-- Set 2 (Duplicate for Seamless Loop) -->
-            <div class="flex items-center gap-20">
-                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
-                    Digital Architects
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
-                    Crafting Unreality
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- HERO BENTO CARD AREA WITH STREAMING VIDEO -->
-    <div class="grid grid-cols-1 md:grid-cols-12 relative z-10 mb-16">
-        <div class="group relative md:col-span-10 md:col-start-2 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-white/[0.002] p-8 md:p-16 backdrop-blur-2xl transition-all duration-700 hover:border-purple-500/40 hover:shadow-[0_0_50px_rgba(168,85,247,0.12)]">
-            
-            <!-- BACKGROUND STREAM VIDEO CONTAINER -->
-            <div class="absolute inset-0 z-0 overflow-hidden rounded-[2rem]">
-                <!-- Video Element -->
-                <video id="mux-player" autoplay loop muted playsinline class="h-full w-full object-cover opacity-15 scale-105 blur-[1px] transition-all duration-1000 ease-out group-hover:opacity-35 group-hover:scale-100 group-hover:blur-0"></video>
-                <!-- Dark Overlay Layer -->
-                <div class="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/70 to-transparent"></div>
+            <!-- Section header -->
+            <div class="mb-12 sm:mb-16 text-center relative z-10">
+                <p class="inline-block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.6em] text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 backdrop-blur-md pl-[0.6em]">
+                    Creative Studio
+                </p>
+                <h2 class="mt-5 sm:mt-6 font-display font-black leading-none tracking-tighter uppercase"
+                    style="font-size: clamp(2.5rem, 8vw, 6rem);">
+                    LAMBANG <br />
+                    <span class="bg-gradient-to-r from-white via-white/70 to-white/30 bg-clip-text text-transparent">DIGITAL LAB</span>
+                </h2>
             </div>
 
-            <!-- Dynamic Background Glow on Card Hover -->
-            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 ease-out pointer-events-none z-10">
-                <div class="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-purple-500/10 blur-[100px]"></div>
-                <div class="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/5 blur-[100px]"></div>
-            </div>
-
-            <!-- Card Content Wrapper -->
-            <div class="relative z-20 flex flex-col md:flex-row md:items-end md:justify-between gap-10">
-
-                <!-- HEADLINE -->
-                <div class="space-y-4 max-w-2xl">
-                    <h3 class="font-display text-4xl md:text-6xl font-black uppercase leading-[0.95] tracking-tight">
-                        <span class="block text-white/90 transition-transform duration-700 group-hover:translate-x-2">
-                            We create experiences
-                        </span>
-                        <span class="block bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent transition-transform duration-700 delay-75 group-hover:translate-x-4">
-                            that feel alive
-                        </span>
-                    </h3>
-                    <p class="text-sm md:text-base text-zinc-400 max-w-md font-light leading-relaxed pt-2 opacity-0 -translate-y-2 transition-all duration-700 delay-100 group-hover:opacity-100 group-hover:translate-y-0">
-                        Pushing the boundaries of digital interfaces through immersive interactive systems.
-                    </p>
+            <!-- Marquee mid -->
+            <div class="relative overflow-hidden py-5 sm:py-6 border-y border-white/[0.05] bg-white/[0.002] mb-12 sm:mb-16 [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
+                <div class="marquee-animation flex w-max items-center gap-16 sm:gap-20">
+                    <div class="flex items-center gap-16 sm:gap-20 shrink-0">
+                        <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                        <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                    </div>
+                    <div class="flex items-center gap-16 sm:gap-20 shrink-0">
+                        <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                        <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                    </div>
                 </div>
+            </div>
 
-                <!-- CTA BUTTON -->
-                <a href="galaxy.html" class="group/cta inline-flex items-center gap-5 self-start md:self-end shrink-0">
-                    <div class="relative overflow-hidden h-6">
-                        <span class="block text-[11px] font-bold uppercase tracking-[0.4em] text-white/60 transition-transform duration-500 ease-out group-hover/cta:-translate-y-full">
-                            Explore Lab
-                        </span>
-                        <span class="absolute left-0 top-0 block translate-y-full text-[11px] font-bold uppercase tracking-[0.4em] text-purple-400 transition-transform duration-500 ease-out group-hover/cta:translate-y-0">
-                            Enter Galaxy
-                        </span>
+            <!-- Bento Hero Card -->
+            <div class="grid grid-cols-1 md:grid-cols-12 relative z-10 mb-12 sm:mb-16">
+                <div class="group bento-card relative md:col-span-10 md:col-start-2 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-white/[0.002] p-6 sm:p-8 md:p-16 backdrop-blur-2xl transition-all duration-700 hover:border-purple-500/40 hover:shadow-[0_0_50px_rgba(168,85,247,0.12)]">
+
+                    <!-- BG video -->
+                    <div class="absolute inset-0 z-0 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem]">
+                        <video id="mux-player" autoplay loop muted playsinline class="h-full w-full object-cover opacity-15 scale-105 blur-[1px] transition-all duration-1000 ease-out group-hover:opacity-35 group-hover:scale-100 group-hover:blur-0"></video>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/70 to-transparent"></div>
                     </div>
 
-                    <div class="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/cta:scale-110 group-hover/cta:rotate-45 group-hover/cta:border-purple-500/40 group-hover/cta:bg-purple-500/20 shadow-lg">
-                        <div class="absolute inset-0 rounded-full bg-purple-500/30 blur-md opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500"></div>
-                        <i data-lucide="arrow-up-right" class="relative h-4 w-4 text-white group-hover/cta:text-purple-300 transition-colors"></i>
+                    <!-- Glow on hover -->
+                    <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 ease-out pointer-events-none z-10">
+                        <div class="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-purple-500/10 blur-[100px]"></div>
+                        <div class="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/5 blur-[100px]"></div>
                     </div>
-                </a>
 
+                    <!-- Content -->
+                    <div class="relative z-20 flex flex-col md:flex-row md:items-end md:justify-between gap-8 sm:gap-10">
+                        <div class="space-y-3 sm:space-y-4 max-w-2xl">
+                            <h3 class="bento-headline font-display font-black uppercase leading-[0.95] tracking-tight"
+                                style="font-size: clamp(1.75rem, 6vw, 3.75rem);">
+                                <span class="block text-white/90 transition-transform duration-700 group-hover:translate-x-2">We create experiences</span>
+                                <span class="block bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent transition-transform duration-700 delay-75 group-hover:translate-x-4">that feel alive</span>
+                            </h3>
+                            <p class="text-sm text-zinc-400 max-w-md font-light leading-relaxed pt-2 opacity-0 -translate-y-2 transition-all duration-700 delay-100 group-hover:opacity-100 group-hover:translate-y-0">
+                                Pushing the boundaries of digital interfaces through immersive interactive systems.
+                            </p>
+                        </div>
+
+                        <!-- CTA -->
+                        <a href="galaxy.html" class="group/cta inline-flex items-center gap-4 sm:gap-5 self-start md:self-end shrink-0">
+                            <div class="relative overflow-hidden h-6">
+                                <span class="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-white/60 transition-transform duration-500 ease-out group-hover/cta:-translate-y-full">Explore Lab</span>
+                                <span class="absolute left-0 top-0 block translate-y-full text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-purple-400 transition-transform duration-500 ease-out group-hover/cta:translate-y-0">Enter Galaxy</span>
+                            </div>
+                            <div class="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/cta:scale-110 group-hover/cta:rotate-45 group-hover/cta:border-purple-500/40 group-hover/cta:bg-purple-500/20 shadow-lg">
+                                <div class="absolute inset-0 rounded-full bg-purple-500/30 blur-md opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500"></div>
+                                <i data-lucide="arrow-up-right" class="relative h-4 w-4 text-white group-hover/cta:text-purple-300 transition-colors"></i>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Noise overlay -->
+                    <div class="absolute inset-0 opacity-[0.015] mix-blend-overlay pointer-events-none z-20"
+                         style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');"></div>
+                </div>
             </div>
 
-            <!-- Subtle Grainy Noise Overlay -->
-            <div class="absolute inset-0 opacity-[0.015] mix-blend-overlay pointer-events-none z-20"
-                 style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');">
+            <!-- Marquee bottom -->
+            <div class="relative overflow-hidden py-5 sm:py-6 border-y border-white/[0.05] bg-white/[0.002] [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
+                <div class="marquee-animation flex w-max items-center gap-16 sm:gap-20">
+                    <div class="flex items-center gap-16 sm:gap-20 shrink-0">
+                        <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                        <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                    </div>
+                    <div class="flex items-center gap-16 sm:gap-20 shrink-0">
+                        <span class="font-display text-2xl sm:text-3xl font-black tracking-tighter text-transparent uppercase whitespace-nowrap" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                        <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50 shrink-0"></i>
+                    </div>
+                </div>
             </div>
+        </section>
 
-        </div>
-    </div>
-
-    <!-- MARQUEE (BOTTOM) -->
-    <div class="relative overflow-hidden py-6 border-y border-white/[0.05] bg-white/[0.002] [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
-        <div class="marquee-animation flex w-max items-center gap-20 animate-marquee">
-            <!-- Set 1 -->
-            <div class="flex items-center gap-20">
-                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
-                    Digital Architects
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
-                    Crafting Unreality
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-            </div>
-            <!-- Set 2 -->
-            <div class="flex items-center gap-20">
-                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
-                    Digital Architects
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
-                    Crafting Unreality
-                </span>
-                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- SCRIPT UNTUK MEMUTAR STREAMING .M3U8 MUX -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const video = document.getElementById('mux-player');
-        const videoSrc = 'https://stream.mux.com/blULaJm2RMbAmsrwxLrBdgEx9yI1do2yM89vHTkdA6I.m3u8';
-
-        if (Hls.isSupported()) {
-            const hls = new Hls({
-                maxMaxBufferLength: 10 // optimasi buffer agar loading super cepat
-            });
-            hls.loadSource(videoSrc);
-            hls.attachMedia(video);
-        } 
-        // fallback untuk browser Safari yang mendukung m3u8 secara native
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = videoSrc;
-        }
-    });
-</script>
     </main>
 
-    <footer id="contact" class="relative bg-[#050505] pt-40 pb-16 px-6">
+    <!-- ── FOOTER ── -->
+    <footer id="contact" class="relative bg-[#050505] pt-24 sm:pt-40 pb-16 px-5 sm:px-8">
         <div class="mx-auto max-w-7xl">
-            <div class="flex flex-col items-center justify-between gap-12 md:flex-row md:items-end">
+            <div class="flex flex-col items-center justify-between gap-10 sm:gap-12 md:flex-row md:items-end">
                 <div class="text-center md:text-left">
-                    <p class="mb-4 text-[11px] font-bold uppercase tracking-[0.8em] text-white/30">Next Step</p>
-                    <h2 class="font-display text-[8vw] font-black leading-none tracking-tighter md:text-[6vw]">
+                    <p class="mb-3 sm:mb-4 text-[11px] font-bold uppercase tracking-[0.8em] text-white/30">Next Step</p>
+                    <h2 class="font-display font-black leading-none tracking-tighter"
+                        style="font-size: clamp(2.5rem, 9vw, 5.5rem);">
                         LET'S <span class="italic text-transparent text-stroke-footer">START</span><br />
                         TALKING<span class="text-purple-500">.</span>
                     </h2>
                 </div>
-
-                <div onclick="openContact()" class="flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-purple-500/50 transition-all cursor-pointer">
-                    <i data-lucide="mail" class="w-8 h-8 text-white/40 group-hover:text-purple-400 transition-colors"></i>
-                </div>
+                <button onclick="openContact()" aria-label="Contact us"
+                    class="flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-purple-500/50 transition-all cursor-pointer active:scale-95">
+                    <i data-lucide="mail" class="w-7 h-7 sm:w-8 sm:h-8 text-white/40 group-hover:text-purple-400 transition-colors"></i>
+                </button>
             </div>
 
-            <div class="mt-24 flex flex-col items-center justify-between gap-6 border-t border-white/5 pt-8 md:flex-row">
-                <p class="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2026 LAMBANG STUDIO. BUILT FOR THE BOLD.</p>
-                <div class="flex gap-8 text-[10px] font-bold tracking-widest text-white/30 uppercase">
-                    <a href="#" class="hover:text-white transition-colors">Instagram</a>
-                    <a href="#" class="hover:text-white transition-colors">Twitter</a>
-                    <a href="#" class="hover:text-white transition-colors">Github</a>
+            <div class="mt-16 sm:mt-24 flex flex-col items-center justify-between gap-5 sm:gap-6 border-t border-white/5 pt-8 md:flex-row">
+                <p class="text-[9px] uppercase tracking-[0.4em] text-white/30 text-center md:text-left">© 2026 LAMBANG STUDIO. BUILT FOR THE BOLD.</p>
+                <div class="flex gap-6 sm:gap-8 text-[10px] font-bold tracking-widest text-white/30 uppercase">
+                    <a href="#" class="hover:text-white transition-colors py-2">Instagram</a>
+                    <a href="#" class="hover:text-white transition-colors py-2">Twitter</a>
+                    <a href="#" class="hover:text-white transition-colors py-2">Github</a>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Showreel Overlay -->
+    <!-- ── SHOWREEL OVERLAY ── -->
     <div id="showreel-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-black opacity-0 pointer-events-none transition-opacity duration-500">
-        <button onclick="closeShowreel()" class="absolute right-8 top-8 z-50 text-white/50 hover:text-white">
-            <i data-lucide="x" class="w-8 h-8"></i>
+        <button onclick="closeShowreel()" aria-label="Close showreel"
+            class="absolute right-5 top-5 sm:right-8 sm:top-8 z-50 text-white/50 hover:text-white p-2">
+            <i data-lucide="x" class="w-7 h-7 sm:w-8 sm:h-8"></i>
         </button>
-        <div class="w-full h-full p-4 md:p-12">
-            <div class="w-full h-full bg-neutral-900 rounded-[2rem] overflow-hidden relative">
+        <div class="w-full h-full p-3 sm:p-4 md:p-12">
+            <div class="w-full h-full bg-neutral-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden relative">
                 <video id="reel-video" class="w-full h-full object-cover" loop playsinline>
                     <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4" type="video/mp4">
                 </video>
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <p class="font-display text-2xl font-black tracking-widest opacity-20 uppercase">Our Studio Showreel 2026</p>
+                    <p class="font-display text-base sm:text-2xl font-black tracking-widest opacity-20 uppercase">Our Studio Showreel 2026</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Case Study Modal -->
-    <div id="project-modal" class="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 modal-blur opacity-0 pointer-events-none transition-opacity duration-500">
-        <div class="w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-10 md:p-16 relative overflow-hidden transform scale-95 transition-transform duration-500">
-            <div class="absolute top-0 right-0 p-8">
-                <button onclick="closeProject()" class="text-white/30 hover:text-white transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+    <!-- ── PROJECT MODAL ── -->
+    <div id="project-modal" class="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 modal-blur opacity-0 pointer-events-none transition-opacity duration-500 px-4">
+        <div class="w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] p-7 sm:p-10 md:p-16 relative overflow-hidden transform scale-95 transition-transform duration-500 max-h-[90vh] overflow-y-auto">
+            <div class="absolute top-0 right-0 p-5 sm:p-8">
+                <button onclick="closeProject()" aria-label="Close" class="text-white/30 hover:text-white transition-colors p-1">
+                    <i data-lucide="x" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </button>
             </div>
             <p id="modal-tag" class="text-purple-400 font-bold text-[10px] uppercase tracking-[0.4em] mb-4">Case Study</p>
-            <h2 id="modal-title" class="font-display text-5xl font-black mb-6 uppercase">Project Title</h2>
-            <p id="modal-desc" class="text-white/50 leading-relaxed mb-10">Detailed description will appear here.</p>
-            <div class="flex gap-4">
-                <button onclick="showAlert('Opening Live Preview...')" class="flex-1 bg-white text-black py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-colors">Live Site</button>
-                <button onclick="closeProject()" class="flex-1 border border-white/10 py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-white/5 transition-colors">Close</button>
+            <h2 id="modal-title" class="font-display text-4xl sm:text-5xl font-black mb-5 sm:mb-6 uppercase">Project Title</h2>
+            <p id="modal-desc" class="text-white/50 leading-relaxed mb-8 sm:mb-10">Detailed description will appear here.</p>
+            <div class="flex gap-3 sm:gap-4">
+                <button onclick="showAlert('Opening Live Preview...')" class="flex-1 bg-white text-black py-3 sm:py-4 rounded-full font-bold text-[11px] uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-colors active:scale-95">Live Site</button>
+                <button onclick="closeProject()" class="flex-1 border border-white/10 py-3 sm:py-4 rounded-full font-bold text-[11px] uppercase tracking-widest hover:bg-white/5 transition-colors active:scale-95">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- Contact Modal -->
-    <div id="contact-modal" class="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 modal-blur opacity-0 pointer-events-none transition-opacity duration-500">
-        <div class="w-full max-w-xl bg-[#030303] border border-white/10 rounded-[2.5rem] p-8 md:p-12">
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="font-display text-3xl font-black tracking-tighter uppercase">Get in touch</h2>
-                <button onclick="closeContact()" class="text-white/30 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+    <!-- ── CONTACT MODAL ── -->
+    <div id="contact-modal" class="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 modal-blur opacity-0 pointer-events-none transition-opacity duration-500 px-4">
+        <div class="w-full max-w-xl bg-[#030303] border border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] p-7 sm:p-8 md:p-12 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-8 sm:mb-10">
+                <h2 class="font-display text-2xl sm:text-3xl font-black tracking-tighter uppercase">Get in touch</h2>
+                <button onclick="closeContact()" aria-label="Close" class="text-white/30 hover:text-white p-1">
+                    <i data-lucide="x" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </button>
             </div>
-            <form class="space-y-6" onsubmit="handleContactSubmit(event)">
+            <form class="space-y-5 sm:space-y-6" onsubmit="handleContactSubmit(event)">
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Your Name</label>
-                    <input type="text" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors">
+                    <input type="text" required autocomplete="name"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors" />
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Email Address</label>
-                    <input type="email" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors">
+                    <input type="email" required autocomplete="email"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors" />
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Message</label>
-                    <textarea rows="4" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors"></textarea>
+                    <textarea rows="4" required
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none"></textarea>
                 </div>
-                <button type="submit" class="w-full bg-purple-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-purple-700 transition-all active:scale-95">Send Proposal</button>
+                <button type="submit" class="w-full bg-purple-600 text-white py-4 rounded-full font-bold text-[11px] uppercase tracking-widest hover:bg-purple-700 transition-all active:scale-95">Send Proposal</button>
             </form>
         </div>
     </div>
 
-    <!-- Custom Alert System -->
-    <div id="alert-box" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[300] bg-white text-black px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-widest opacity-0 pointer-events-none transition-all duration-300">
+    <!-- ── ALERT ── -->
+    <div id="alert-box" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] bg-white text-black px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-[10px] uppercase tracking-widest opacity-0 pointer-events-none transition-all duration-300 whitespace-nowrap">
         Message sent successfully
     </div>
 
+    <!-- HLS.js for Mux streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
     <script>
-        // Initialize Icons
+        // ── Icons ──
         lucide.createIcons();
 
-        // Elements
-        const navbar = document.getElementById('navbar');
-        const navContainer = document.getElementById('nav-container');
-        const heroContent = document.getElementById('hero-content');
-        const menuToggle = document.getElementById('menu-toggle');
-        const menuOverlay = document.getElementById('mobile-overlay');
-        const menuIconWrapper = document.getElementById('menu-icon-wrapper');
-        const alertBox = document.getElementById('alert-box');
+        // ── Elements ──
+        const navbar        = document.getElementById('navbar');
+        const navContainer  = document.getElementById('nav-container');
+        const heroContent   = document.getElementById('hero-content');
+        const menuToggle    = document.getElementById('menu-toggle');
+        const menuOverlay   = document.getElementById('mobile-overlay');
+        const iconMenu      = document.getElementById('icon-menu');
+        const iconClose     = document.getElementById('icon-close');
+        const alertBox      = document.getElementById('alert-box');
 
+        // ── Mux HLS ──
+        document.addEventListener("DOMContentLoaded", function () {
+            const video    = document.getElementById('mux-player');
+            const videoSrc = 'https://stream.mux.com/blULaJm2RMbAmsrwxLrBdgEx9yI1do2yM89vHTkdA6I.m3u8';
+            if (Hls.isSupported()) {
+                const hls = new Hls({ maxMaxBufferLength: 10 });
+                hls.loadSource(videoSrc);
+                hls.attachMedia(video);
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = videoSrc;
+            }
+        });
+
+        // ── Letter scatter ──
+        const title = document.getElementById("galaxyTitle");
+
+        function createParticles() {
+            const text = title.innerText.replace(/\n/g, "");
+            title.innerHTML = "";
+            text.split("").forEach((char) => {
+                const span = document.createElement("span");
+                span.innerText = char === " " ? "\u00A0" : char;
+                span.className = "inline-block transition-all duration-700";
+                title.appendChild(span);
+            });
+        }
+        createParticles();
+
+        const letters = title.querySelectorAll("span");
+
+        title.parentElement.addEventListener("mouseenter", () => {
+            letters.forEach((el) => {
+                const x = (Math.random() - 0.5) * 120;
+                const y = (Math.random() - 0.5) * 120;
+                const rot = (Math.random() - 0.5) * 360;
+                el.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg)`;
+                el.style.opacity   = "0.2";
+                el.style.filter    = "blur(2px)";
+            });
+        });
+        title.parentElement.addEventListener("mouseleave", () => {
+            letters.forEach((el) => {
+                el.style.transform = "translate(0,0) rotate(0deg)";
+                el.style.opacity   = "1";
+                el.style.filter    = "blur(0)";
+            });
+        });
+
+        // ── Mobile Menu ──
         let isMenuOpen = false;
-const title = document.getElementById("galaxyTitle");
-
-function createParticles() {
-    const text = title.innerText.replace(/\n/g, "");
-    title.innerHTML = "";
-
-    text.split("").forEach((char) => {
-        const span = document.createElement("span");
-        span.innerText = char === " " ? " " : char;
-        span.className = "inline-block transition-all duration-700";
-        title.appendChild(span);
-    });
-}
-
-createParticles();
-
-const letters = title.querySelectorAll("span");
-
-title.parentElement.addEventListener("mouseenter", () => {
-    letters.forEach((el, i) => {
-        const x = (Math.random() - 0.5) * 120;
-        const y = (Math.random() - 0.5) * 120;
-        const rot = (Math.random() - 0.5) * 360;
-
-        el.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg)`;
-        el.style.opacity = "0.2";
-        el.style.filter = "blur(2px)";
-    });
-});
-
-title.parentElement.addEventListener("mouseleave", () => {
-    letters.forEach((el) => {
-        el.style.transform = `translate(0px, 0px) rotate(0deg)`;
-        el.style.opacity = "1";
-        el.style.filter = "blur(0px)";
-    });
-});
-        
         function toggleMenu() {
             isMenuOpen = !isMenuOpen;
             if (isMenuOpen) {
                 menuOverlay.classList.add('open', 'pointer-events-auto');
-                menuIconWrapper.style.transform = 'translateY(-42px)';
-                document.body.style.overflow = 'hidden';
+                document.body.classList.add('no-scroll');
+                iconMenu.style.opacity  = '0';  iconMenu.style.transform  = 'scale(0.75)';
+                iconClose.style.opacity = '1';  iconClose.style.transform = 'scale(1)';
             } else {
                 menuOverlay.classList.remove('open', 'pointer-events-auto');
-                menuIconWrapper.style.transform = 'translateY(0)';
-                document.body.style.overflow = 'auto';
+                document.body.classList.remove('no-scroll');
+                iconMenu.style.opacity  = '1';  iconMenu.style.transform  = 'scale(1)';
+                iconClose.style.opacity = '0';  iconClose.style.transform = 'scale(0.75)';
             }
         }
-
         menuToggle.addEventListener('click', toggleMenu);
 
-        // Showreel Controls
+        // ── Showreel ──
         function openShowreel() {
             const overlay = document.getElementById('showreel-overlay');
-            const video = document.getElementById('reel-video');
+            const video   = document.getElementById('reel-video');
             overlay.classList.remove('pointer-events-none');
             overlay.classList.add('opacity-100');
             video.play();
+            document.body.classList.add('no-scroll');
         }
-
         function closeShowreel() {
             const overlay = document.getElementById('showreel-overlay');
-            const video = document.getElementById('reel-video');
+            const video   = document.getElementById('reel-video');
             overlay.classList.add('pointer-events-none');
             overlay.classList.remove('opacity-100');
             video.pause();
+            document.body.classList.remove('no-scroll');
         }
 
-        // Project Modal Controls
-        function openProject(title, desc) {
-            const modal = document.getElementById('project-modal');
+        // ── Project Modal ──
+        function openProject(t, desc) {
+            const modal    = document.getElementById('project-modal');
             const modalBox = modal.querySelector('div');
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-desc').innerText = desc;
-            
+            document.getElementById('modal-title').innerText = t;
+            document.getElementById('modal-desc').innerText  = desc;
             modal.classList.remove('pointer-events-none');
             modal.classList.add('opacity-100');
             modalBox.classList.remove('scale-95');
             modalBox.classList.add('scale-100');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('no-scroll');
         }
-
         function closeProject() {
-            const modal = document.getElementById('project-modal');
+            const modal    = document.getElementById('project-modal');
             const modalBox = modal.querySelector('div');
             modal.classList.add('pointer-events-none');
             modal.classList.remove('opacity-100');
             modalBox.classList.add('scale-95');
             modalBox.classList.remove('scale-100');
-            document.body.style.overflow = 'auto';
+            document.body.classList.remove('no-scroll');
         }
 
-        // Contact Controls
+        // ── Contact Modal ──
         function openContact() {
             const modal = document.getElementById('contact-modal');
             modal.classList.remove('pointer-events-none');
             modal.classList.add('opacity-100');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('no-scroll');
         }
-
         function closeContact() {
             const modal = document.getElementById('contact-modal');
             modal.classList.add('pointer-events-none');
             modal.classList.remove('opacity-100');
-            document.body.style.overflow = 'auto';
+            document.body.classList.remove('no-scroll');
         }
-
         function handleContactSubmit(e) {
             e.preventDefault();
             closeContact();
@@ -694,49 +723,70 @@ title.parentElement.addEventListener("mouseleave", () => {
             e.target.reset();
         }
 
+        // ── Alert ──
         function showAlert(msg) {
             alertBox.innerText = msg;
             alertBox.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
             alertBox.classList.add('opacity-100', 'translate-y-0');
             setTimeout(() => {
                 alertBox.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+                alertBox.classList.remove('opacity-100', 'translate-y-0');
             }, 3000);
         }
 
+        // ── Navbar on scroll ──
+        let ticking = false;
         window.addEventListener('scroll', () => {
-            const scrolled = window.scrollY > 50;
-            
-            if (scrolled) {
-                navbar.classList.remove('py-8');
-                navbar.classList.add('py-4');
-                navContainer.classList.add('bg-black/60', 'backdrop-blur-xl', 'rounded-full', 'border', 'border-white/5', 'mx-4', 'md:mx-12', 'py-3', 'pr-4', 'pl-8');
-            } else {
-                navbar.classList.add('py-8');
-                navbar.classList.remove('py-4');
-                navContainer.classList.remove('bg-black/60', 'backdrop-blur-xl', 'rounded-full', 'border', 'border-white/5', 'mx-4', 'md:mx-12', 'py-3', 'pr-4', 'pl-8');
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    const scrolled = window.scrollY > 50;
+                    if (scrolled) {
+                        navbar.style.paddingTop = 'max(0.75rem, calc(0.5rem + env(safe-area-inset-top)))';
+                        navContainer.classList.add('bg-black/60','backdrop-blur-xl','rounded-full','border','border-white/5','mx-4','md:mx-12','py-3','pr-4','pl-8');
+                    } else {
+                        navbar.style.paddingTop = 'max(1.5rem, calc(1rem + env(safe-area-inset-top)))';
+                        navContainer.classList.remove('bg-black/60','backdrop-blur-xl','rounded-full','border','border-white/5','mx-4','md:mx-12','py-3','pr-4','pl-8');
+                    }
+                    // Parallax only on non-mobile to avoid jank
+                    if (window.innerWidth >= 768) {
+                        const yPos    = window.scrollY * 0.3;
+                        const opacity = Math.max(0, 1 - window.scrollY / 600);
+                        heroContent.style.transform = `translateY(${yPos}px)`;
+                        heroContent.style.opacity   = opacity;
+                    }
+                    ticking = false;
+                });
+                ticking = true;
             }
-
-            // Parallax Effect
-            const yPos = window.scrollY * 0.3;
-            const opacity = Math.max(0, 1 - window.scrollY / 600);
-            heroContent.style.transform = `translateY(${yPos}px)`;
-            heroContent.style.opacity = opacity;
         });
 
-        const observerOptions = { threshold: 0.2 };
+        // ── Scroll reveal ──
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
+                if (entry.isIntersecting) entry.target.classList.add('visible');
             });
-        }, observerOptions);
+        }, { threshold: 0.15 });
 
-        document.querySelectorAll('.reveal-on-scroll, .project-card').forEach(el => {
-            revealObserver.observe(el);
+        document.querySelectorAll('.reveal-on-scroll, .project-card').forEach(el => revealObserver.observe(el));
+
+        // ── Close modals on backdrop tap (mobile UX) ──
+        document.getElementById('project-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeProject();
+        });
+        document.getElementById('contact-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeContact();
+        });
+        document.getElementById('showreel-overlay').addEventListener('click', function(e) {
+            if (e.target === this || e.target.tagName === 'VIDEO') closeShowreel();
         });
 
-
+        // ── Close on Escape ──
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeProject(); closeContact(); closeShowreel();
+                if (isMenuOpen) toggleMenu();
+            }
+        });
     </script>
 </body>
 </html>
