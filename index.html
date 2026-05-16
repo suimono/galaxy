@@ -1,839 +1,741 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Partikel Gestur 3D</title>
-    
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNREAL_STUDIO | Digital Architects</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- MediaPipe dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-
-    <!-- Three.js Import Map -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/"
-            }
-        }
-    </script>
-
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Mengubah latar belakang dasar menjadi gradasi angkasa biru malam */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; background: radial-gradient(circle at 50% 50%, #1a1525 0%, #050505 100%); }
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        #ui-layer { position: absolute; z-index: 10; pointer-events: none; }
-        .pointer-events-auto { pointer-events: auto; }
-        
-        /* Glassmorphism styling */
-        .glass-panel {
-            background: rgba(20, 20, 25, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        /* Video PIP */
-        #video-pip {
-            transform: scaleX(-1);
-            border-radius: 0.5rem;
-            width: 100px;
-            height: 75px;
-            object-fit: cover;
-            background-color: #000;
-        }
-        #output-canvas {
-            transform: scaleX(-1);
-            position: absolute;
-            top: 0; left: 0;
-            width: 100px; height: 75px;
-            border-radius: 0.5rem;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg: #030303;
+            --accent: #8b5cf6;
+            --accent-light: #c084fc;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(255, 255, 255, 0.03);
         }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .font-display { font-family: 'Space Grotesk', sans-serif; }
+
+        .noise-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            opacity: 0.015;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: linear-gradient(var(--glass-border) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+            opacity: 0.2;
+        }
+
+        .text-stroke { -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
+        .text-stroke-footer { -webkit-text-stroke: 1px rgba(255,255,255,0.4); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        #mobile-overlay {
+            clip-path: circle(0% at 90% 10%);
+            transition: clip-path 0.8s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.8s;
+        }
+        #mobile-overlay.open {
+            clip-path: circle(150% at 90% 10%);
+            opacity: 1;
+        }
+
+        .marquee-animation {
+            display: flex;
+            gap: 5rem;
+            animation: marquee 25s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .reveal-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Modal specific animation */
+        .modal-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .line {
+  display: block;
+  transition: all 0.6s ease;
+}
+
+.group:hover .line {
+  filter: blur(1px);
+  transform: scale(1.02);
+}
+
+/* particle pieces */
+.particle {
+  position: absolute;
+  font-weight: 900;
+  pointer-events: none;
+  color: white;
+  opacity: 0;
+  transform: translate(0,0);
+  transition: all 1s ease;
+}
+
+.group.active .particle {
+  opacity: 1;
+}
     </style>
 </head>
-<body class="text-white">
+<body class="bg-[#030303] text-white selection:bg-purple-500/30 min-h-screen">
 
-    <!-- 3D Canvas -->
-    <div id="canvas-container"></div>
+    <div class="noise-bg"></div>
+    <div class="grid-bg"></div>
 
-    <!-- UI Layer -->
-    <div id="ui-layer" class="w-full h-full flex flex-col justify-between pb-safe">
-        
-        <!-- Bagian Atas: PIP Kamera -->
-        <div class="flex justify-end items-start p-4 pointer-events-none">
-            <div class="glass-panel p-2 rounded-xl pointer-events-auto shadow-xl relative" id="pip-container" style="display: none;">
-                <video id="input-video" class="hidden" autoplay playsinline muted></video>
-                <div class="relative w-[100px] h-[75px]">
-                    <video id="video-pip" autoplay playsinline muted></video>
-                    <canvas id="output-canvas"></canvas>
+    <nav id="navbar" class="fixed left-0 top-0 z-[100] w-full transition-all duration-700 py-8">
+        <div id="nav-container" class="mx-auto flex max-w-[1400px] items-center justify-between px-6 md:px-12 transition-all duration-500">
+            <div class="font-display text-xl font-bold tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
+                LAMBANG<span class="text-purple-500">_</span>STUDIO
+            </div>
+
+            <div class="flex items-center gap-8">
+                <div class="hidden items-center gap-10 md:flex">
+                    <a href="#work" class="group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-white">
+                        <span class="relative z-10">Work</span>
+                        <span class="absolute -bottom-1 left-0 h-[1px] w-0 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#labs" class="group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-white">
+                        <span class="relative z-10">Labs</span>
+                        <span class="absolute -bottom-1 left-0 h-[1px] w-0 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#contact" class="group relative text-[11px] font-bold uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-white">
+                        <span class="relative z-10">Contact</span>
+                        <span class="absolute -bottom-1 left-0 h-[1px] w-0 bg-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    
                 </div>
-                <div class="mt-1 text-center text-[10px] font-mono text-blue-300 leading-tight" id="tracking-status">Menunggu Tangan</div>
-                <div class="w-full bg-gray-700 h-1 mt-1 rounded overflow-hidden">
-                    <div id="gesture-bar" class="bg-blue-400 h-full w-0 transition-all duration-75"></div>
+                
+                <button id="menu-toggle"
+    class="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-all duration-300 hover:border-purple-500/50 hover:bg-white/10">
+
+    <div id="menu-icon-wrapper"
+        class="relative flex h-[18px] w-[18px] items-center justify-center transition-transform duration-500">
+
+        <!-- MENU ICON -->
+        <i data-lucide="menu"
+            class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-100 scale-100"
+            id="icon-menu"></i>
+
+        <!-- CLOSE ICON -->
+        <i data-lucide="x"
+            class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-0 scale-75"
+            id="icon-close"></i>
+
+    </div>
+</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mobile-overlay" class="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-3xl opacity-0 pointer-events-none">
+        <div class="flex flex-col items-center gap-8 text-center">
+            <a href="#work" onclick="toggleMenu()" class="font-display text-4xl sm:text-6xl font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">WORKS</a>
+            <a href="#labs" onclick="toggleMenu()" class="font-display text-4xl sm:text-6xl font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">LABS</a>
+            <a href="#contact" onclick="toggleMenu()" class="font-display text-4xl sm:text-6xl font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">CONTACT</a>
+        </div>
+    </div>
+
+    <main class="relative z-10">
+        <section class="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-32 pb-20">
+            <div class="absolute inset-0 z-0 overflow-hidden">
+                <video autoPlay muted loop playsInline preload="auto" class="absolute inset-0 h-full w-full object-cover opacity-70 brightness-90 contrast-125">
+                    <source src="https://stream.mux.com/sDz01Os9GN02ltJvgikeaUvZWsLRiR5FX5GuadCRkQc7E.m3u8" type="video/mp4" />
+                </video>
+                <div class="absolute inset-0 bg-black/45"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06),transparent_60%)]"></div>
+            </div>
+
+            <div id="hero-content" class="relative z-10 w-full max-w-[1400px] transition-all duration-1000">
+                
+                <div class="group relative flex flex-col items-center text-center">
+
+    <h1 id="galaxyTitle"
+        class="font-display pointer-events-none select-none text-[11vw] font-black leading-[0.9] tracking-tighter md:text-[13vw]">
+
+        <span class="line block text-white">UNREAL</span>
+        <span class="line block italic text-transparent text-stroke"></span>
+
+    </h1>
+
+</div>
+
+
+
+                    <div class="mt-12 flex flex-col items-center gap-12 md:flex-row md:items-center md:justify-between md:w-full md:px-12">
+                        <p class="max-w-[320px] text-[11px] leading-relaxed uppercase tracking-[0.2em] text-white/40 text-center md:text-left">
+                            We craft high-end digital solutions at the intersection of aesthetics and code.
+                        </p>
+
+                        <button onclick="openShowreel()" class="group relative flex h-28 w-28 items-center justify-center rounded-full bg-white text-black transition-all hover:bg-purple-600 hover:text-white active:scale-95">
+                            <div class="absolute inset-0 animate-[spin_12s_linear_infinite] text-[8px] font-bold uppercase tracking-widest p-2">
+                                <svg viewBox="0 0 100 100" class="h-full w-full overflow-visible">
+                                    <path id="circlePath" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="none" />
+                                    <text class="fill-current text-[9px] font-semibold">
+                                        <textPath href="#circlePath">VIEW OUR SHOWREEL • PLAY NOW • </textPath>
+                                    </text>
+                                </svg>
+                            </div>
+                            <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="relative overflow-hidden py-16 border-y border-white/5 bg-white/[0.01]">
+            <div class="marquee-animation">
+                <div class="flex items-center gap-20">
+                    <span class="font-display text-3xl font-bold tracking-tighter opacity-10 uppercase">Digital Architects</span>
+                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
+                    <span class="font-display text-3xl font-bold tracking-tighter text-white/40 uppercase">Crafting Unreality</span>
+                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
+                </div>
+                <!-- Duplicate for seamless loop -->
+                <div class="flex items-center gap-20">
+                    <span class="font-display text-3xl font-bold tracking-tighter opacity-10 uppercase">Digital Architects</span>
+                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
+                    <span class="font-display text-3xl font-bold tracking-tighter text-white/40 uppercase">Crafting Unreality</span>
+                    <i data-lucide="plus" class="text-purple-500 w-5 h-5"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Bagian Bawah: Instruksi & Panel Kontrol -->
-        <div class="flex flex-col w-full pointer-events-none">
+        <section id="work" class="relative mx-auto max-w-[1500px] overflow-hidden px-6 py-28 md:px-12 md:py-40">
+            <div class="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-purple-500/10 blur-[140px]"></div>
+
+            <div class="mb-24 flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
+                <div class="reveal-on-scroll max-w-3xl">
+                    <p class="mb-5 text-[10px] font-bold uppercase tracking-[0.6em] text-purple-400">Portfolio Index 2026</p>
+                    <h2 class="font-display text-5xl font-black leading-[0.9] tracking-[-0.06em] md:text-8xl">
+                        LAMBANG <br />
+                        <span class="text-white/30">EXPERIENCES</span>
+                    </h2>
+                </div>
+                <p class="reveal-on-scroll max-w-sm text-xs uppercase leading-loose tracking-[0.25em] text-white/40">
+                    A curated collection of immersive digital experiences blending motion, interaction, and futuristic aesthetics.
+                </p>
+            </div>
+
+            <div class="space-y-16">
+                <!-- PROJECT 01 -->
+                <div class="project-card group relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition-all duration-700 hover:border-purple-500/30 hover:bg-white/[0.05]">
+                    <div class="grid grid-cols-1 items-center gap-14 md:grid-cols-12">
+                        <div class="relative overflow-hidden rounded-[2rem] md:col-span-7 aspect-[4/3] bg-black">
+                            <video autoplay muted loop playsinline class="h-full w-full object-cover transition-all duration-[1500ms] group-hover:scale-105">
+                                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_055001_8e16d972-3b2b-441c-86ad-2901a54682f9.mp4" type="video/mp4">
+                            </video>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                        </div>
+                        <div class="relative z-10 md:col-span-5">
+                            <div class="mb-8 flex flex-wrap gap-3">
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">WebGL</span>
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Motion</span>
+                            </div>
+                            <h3 class="mb-6 font-display text-5xl font-black tracking-[-0.05em] transition-all duration-500 group-hover:translate-x-2 group-hover:text-purple-400 md:text-7xl">SYNERGY</h3>
+                            <p class="mb-10 max-w-md text-sm leading-relaxed text-white/55">A decentralized ecosystem connecting creators through cinematic motion systems.</p>
+                            <button onclick="openProject('Synergy', 'Exploring the boundaries of decentralized creativity.')" class="group/btn flex items-center gap-5 text-[11px] font-bold uppercase tracking-[0.35em] text-white hover:text-purple-300">
+                                Explore Case Study
+                                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/btn:translate-x-2">
+                                    <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROJECT 02 -->
+                <div class="project-card group relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl transition-all duration-700 hover:border-purple-500/30 hover:bg-white/[0.05]">
+                    <div class="grid grid-cols-1 items-center gap-14 md:grid-cols-12">
+                        <div class="relative order-2 md:order-1 md:col-span-5">
+                            <div class="mb-8 flex flex-wrap gap-3">
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Three.js</span>
+                                <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.25em] text-purple-300">Spatial</span>
+                            </div>
+                            <h3 class="mb-6 font-display text-5xl font-black tracking-[-0.05em] transition-all duration-500 group-hover:-translate-x-2 group-hover:text-purple-400 md:text-7xl">ETHEREAL</h3>
+                            <p class="mb-10 max-w-md text-sm leading-relaxed text-white/55">Redefining immersive interfaces using futuristic motion systems and generative visuals.</p>
+                            <button onclick="openProject('Ethereal', 'Generative art meets spatial interaction.')" class="group/btn flex items-center gap-5 text-[11px] font-bold uppercase tracking-[0.35em] text-white hover:text-purple-300">
+                                Explore Case Study
+                                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/btn:-translate-x-2">
+                                    <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="relative order-1 md:order-2 overflow-hidden rounded-[2rem] md:col-span-7 aspect-[4/3] bg-black">
+                            <video autoplay muted loop playsinline class="h-full w-full object-cover transition-all duration-[1500ms] group-hover:scale-105">
+                                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260429_115139_0fc6bd3d-3631-4d26-ab9b-28293887dcc9.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<section id="labs" class="relative mx-auto max-w-[1500px] px-6 py-24 md:px-12 md:py-36 overflow-hidden bg-[#030303] text-white">
+
+    <!-- Ambient Background Glows -->
+    <div class="pointer-events-none absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-to-b from-purple-600/20 to-blue-600/0 blur-[140px]"></div>
+    <div class="pointer-events-none absolute -left-20 top-1/3 h-[300px] w-[300px] rounded-full bg-purple-500/10 blur-[100px]"></div>
+
+    <!-- SECTION HEADER -->
+    <div class="mb-16 text-center relative z-10">
+        <p class="inline-block text-[11px] font-bold uppercase tracking-[0.6em] text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 backdrop-blur-md pl-[0.6em]">
+            Creative Studio
+        </p>
+        <h2 class="mt-6 font-display text-5xl font-black leading-none md:text-8xl tracking-tighter uppercase">
+            LAMBANG <br />
+            <span class="bg-gradient-to-r from-white via-white/70 to-white/30 bg-clip-text text-transparent">DIGITAL LAB</span>
+        </h2>
+    </div>
+
+    <!-- MARQUEE (TOP) -->
+    <div class="relative overflow-hidden py-6 border-y border-white/[0.05] bg-white/[0.002] mb-16 [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
+        <div class="marquee-animation flex w-max items-center gap-20 animate-marquee">
+            <!-- Set 1 -->
+            <div class="flex items-center gap-20">
+                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
+                    Digital Architects
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
+                    Crafting Unreality
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+            </div>
+            <!-- Set 2 (Duplicate for Seamless Loop) -->
+            <div class="flex items-center gap-20">
+                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
+                    Digital Architects
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
+                    Crafting Unreality
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- HERO BENTO CARD AREA WITH STREAMING VIDEO -->
+    <div class="grid grid-cols-1 md:grid-cols-12 relative z-10 mb-16">
+        <div class="group relative md:col-span-10 md:col-start-2 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-white/[0.002] p-8 md:p-16 backdrop-blur-2xl transition-all duration-700 hover:border-purple-500/40 hover:shadow-[0_0_50px_rgba(168,85,247,0.12)]">
             
-            <!-- Instructions -->
-            <div class="text-center mb-3 px-4">
-                <div class="inline-block glass-panel px-4 py-2 rounded-full shadow-lg border border-blue-500/30">
-                    <p class="text-[11px] sm:text-sm text-gray-200">
-                        <span class="font-bold text-white">Kosong:</span> Tabrakan Planet &nbsp;|&nbsp; 
-                        <span class="font-bold text-white">Buka:</span> Tangan &nbsp;|&nbsp; 
-                        <span class="font-bold text-white">Kepal:</span> Pola (Meledak)
+            <!-- BACKGROUND STREAM VIDEO CONTAINER -->
+            <div class="absolute inset-0 z-0 overflow-hidden rounded-[2rem]">
+                <!-- Video Element -->
+                <video id="mux-player" autoplay loop muted playsinline class="h-full w-full object-cover opacity-15 scale-105 blur-[1px] transition-all duration-1000 ease-out group-hover:opacity-35 group-hover:scale-100 group-hover:blur-0"></video>
+                <!-- Dark Overlay Layer -->
+                <div class="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/70 to-transparent"></div>
+            </div>
+
+            <!-- Dynamic Background Glow on Card Hover -->
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 ease-out pointer-events-none z-10">
+                <div class="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-purple-500/10 blur-[100px]"></div>
+                <div class="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/5 blur-[100px]"></div>
+            </div>
+
+            <!-- Card Content Wrapper -->
+            <div class="relative z-20 flex flex-col md:flex-row md:items-end md:justify-between gap-10">
+
+                <!-- HEADLINE -->
+                <div class="space-y-4 max-w-2xl">
+                    <h3 class="font-display text-4xl md:text-6xl font-black uppercase leading-[0.95] tracking-tight">
+                        <span class="block text-white/90 transition-transform duration-700 group-hover:translate-x-2">
+                            We create experiences
+                        </span>
+                        <span class="block bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent transition-transform duration-700 delay-75 group-hover:translate-x-4">
+                            that feel alive
+                        </span>
+                    </h3>
+                    <p class="text-sm md:text-base text-zinc-400 max-w-md font-light leading-relaxed pt-2 opacity-0 -translate-y-2 transition-all duration-700 delay-100 group-hover:opacity-100 group-hover:translate-y-0">
+                        Pushing the boundaries of digital interfaces through immersive interactive systems.
                     </p>
+                </div>
+
+                <!-- CTA BUTTON -->
+                <a href="galaxy.html" class="group/cta inline-flex items-center gap-5 self-start md:self-end shrink-0">
+                    <div class="relative overflow-hidden h-6">
+                        <span class="block text-[11px] font-bold uppercase tracking-[0.4em] text-white/60 transition-transform duration-500 ease-out group-hover/cta:-translate-y-full">
+                            Explore Lab
+                        </span>
+                        <span class="absolute left-0 top-0 block translate-y-full text-[11px] font-bold uppercase tracking-[0.4em] text-purple-400 transition-transform duration-500 ease-out group-hover/cta:translate-y-0">
+                            Enter Galaxy
+                        </span>
+                    </div>
+
+                    <div class="relative flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/cta:scale-110 group-hover/cta:rotate-45 group-hover/cta:border-purple-500/40 group-hover/cta:bg-purple-500/20 shadow-lg">
+                        <div class="absolute inset-0 rounded-full bg-purple-500/30 blur-md opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500"></div>
+                        <i data-lucide="arrow-up-right" class="relative h-4 w-4 text-white group-hover/cta:text-purple-300 transition-colors"></i>
+                    </div>
+                </a>
+
+            </div>
+
+            <!-- Subtle Grainy Noise Overlay -->
+            <div class="absolute inset-0 opacity-[0.015] mix-blend-overlay pointer-events-none z-20"
+                 style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');">
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MARQUEE (BOTTOM) -->
+    <div class="relative overflow-hidden py-6 border-y border-white/[0.05] bg-white/[0.002] [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
+        <div class="marquee-animation flex w-max items-center gap-20 animate-marquee">
+            <!-- Set 1 -->
+            <div class="flex items-center gap-20">
+                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
+                    Digital Architects
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
+                    Crafting Unreality
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+            </div>
+            <!-- Set 2 -->
+            <div class="flex items-center gap-20">
+                <span class="font-display text-3xl font-black tracking-tighter text-transparent uppercase" style="-webkit-text-stroke: 1px rgba(255,255,255,0.3);">
+                    Digital Architects
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+                <span class="font-display text-3xl font-extrabold tracking-tighter text-white/40 uppercase">
+                    Crafting Unreality
+                </span>
+                <i data-lucide="plus" class="text-purple-500 w-4 h-4 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SCRIPT UNTUK MEMUTAR STREAMING .M3U8 MUX -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const video = document.getElementById('mux-player');
+        const videoSrc = 'https://stream.mux.com/blULaJm2RMbAmsrwxLrBdgEx9yI1do2yM89vHTkdA6I.m3u8';
+
+        if (Hls.isSupported()) {
+            const hls = new Hls({
+                maxMaxBufferLength: 10 // optimasi buffer agar loading super cepat
+            });
+            hls.loadSource(videoSrc);
+            hls.attachMedia(video);
+        } 
+        // fallback untuk browser Safari yang mendukung m3u8 secara native
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = videoSrc;
+        }
+    });
+</script>
+    </main>
+
+    <footer id="contact" class="relative bg-[#050505] pt-40 pb-16 px-6">
+        <div class="mx-auto max-w-7xl">
+            <div class="flex flex-col items-center justify-between gap-12 md:flex-row md:items-end">
+                <div class="text-center md:text-left">
+                    <p class="mb-4 text-[11px] font-bold uppercase tracking-[0.8em] text-white/30">Next Step</p>
+                    <h2 class="font-display text-[8vw] font-black leading-none tracking-tighter md:text-[6vw]">
+                        LET'S <span class="italic text-transparent text-stroke-footer">START</span><br />
+                        TALKING<span class="text-purple-500">.</span>
+                    </h2>
+                </div>
+
+                <div onclick="openContact()" class="flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-purple-500/50 transition-all cursor-pointer">
+                    <i data-lucide="mail" class="w-8 h-8 text-white/40 group-hover:text-purple-400 transition-colors"></i>
                 </div>
             </div>
 
-            <!-- Controls Panel -->
-            <div class="glass-panel p-5 rounded-t-3xl sm:rounded-2xl sm:mx-auto sm:mb-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pointer-events-auto flex flex-col w-full sm:w-80 transition-all duration-300 border-b-0 sm:border-b">
-                
-                <div class="flex justify-between items-center w-full">
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Menu Kustomisasi</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button id="btn-toggle-panel" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors" title="Sembunyikan Panel">
-                            <svg id="icon-toggle" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                    </div>
+            <div class="mt-24 flex flex-col items-center justify-between gap-6 border-t border-white/5 pt-8 md:flex-row">
+                <p class="text-[9px] uppercase tracking-[0.4em] text-white/30">© 2026 LAMBANG STUDIO. BUILT FOR THE BOLD.</p>
+                <div class="flex gap-8 text-[10px] font-bold tracking-widest text-white/30 uppercase">
+                    <a href="#" class="hover:text-white transition-colors">Instagram</a>
+                    <a href="#" class="hover:text-white transition-colors">Twitter</a>
+                    <a href="#" class="hover:text-white transition-colors">Github</a>
                 </div>
+            </div>
+        </div>
+    </footer>
 
-                <div id="panel-content" class="transition-all duration-500 ease-in-out overflow-hidden flex flex-col gap-4 max-h-[500px] opacity-100 mt-4">
-                    <div class="space-y-3">
-                        
-                        <!-- Input Teks Kustom -->
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Teks Kustom (Pola Dasar)</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="custom-text-input" value="" maxlength="12" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 outline-none transition-colors" placeholder="Ketik disini...">
-                                <button id="btn-apply-text" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors">Terapkan</button>
-                            </div>
-                        </div>
-
-                        <!-- Pattern Selection -->
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Pilih Pola Dasar</label>
-                            <select id="pattern-select" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none transition-colors appearance-none">
-                                <option value="text" class="bg-gray-900">Teks Kustom (Default)</option>
-                                <option value="galaxy" class="bg-gray-900">Galaksi Spiral</option>
-                                <option value="sphere" class="bg-gray-900">Bola Kuantum</option>
-                                <option value="dna" class="bg-gray-900">Heliks DNA</option>
-                            </select>
-                        </div>
-
-                        <!-- Color Picker -->
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Warna Energi Utama</label>
-                            <div class="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl p-2">
-                                <input type="color" id="color-picker" value="#00d2ff" class="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0 p-0 shadow-sm outline-none">
-                                <span class="text-sm font-mono text-gray-300 uppercase" id="color-value">#00d2ff</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- System Controls -->
-                    <button id="btn-camera" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                        Mulai Kamera
-                    </button>
+    <!-- Showreel Overlay -->
+    <div id="showreel-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-black opacity-0 pointer-events-none transition-opacity duration-500">
+        <button onclick="closeShowreel()" class="absolute right-8 top-8 z-50 text-white/50 hover:text-white">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+        <div class="w-full h-full p-4 md:p-12">
+            <div class="w-full h-full bg-neutral-900 rounded-[2rem] overflow-hidden relative">
+                <video id="reel-video" class="w-full h-full object-cover" loop playsinline>
+                    <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4" type="video/mp4">
+                </video>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <p class="font-display text-2xl font-black tracking-widest opacity-20 uppercase">Our Studio Showreel 2026</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Application Logic -->
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    <!-- Case Study Modal -->
+    <div id="project-modal" class="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 modal-blur opacity-0 pointer-events-none transition-opacity duration-500">
+        <div class="w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-10 md:p-16 relative overflow-hidden transform scale-95 transition-transform duration-500">
+            <div class="absolute top-0 right-0 p-8">
+                <button onclick="closeProject()" class="text-white/30 hover:text-white transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <p id="modal-tag" class="text-purple-400 font-bold text-[10px] uppercase tracking-[0.4em] mb-4">Case Study</p>
+            <h2 id="modal-title" class="font-display text-5xl font-black mb-6 uppercase">Project Title</h2>
+            <p id="modal-desc" class="text-white/50 leading-relaxed mb-10">Detailed description will appear here.</p>
+            <div class="flex gap-4">
+                <button onclick="showAlert('Opening Live Preview...')" class="flex-1 bg-white text-black py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-colors">Live Site</button>
+                <button onclick="closeProject()" class="flex-1 border border-white/10 py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-white/5 transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
 
-        const AppState = {
-            particleCount: 60000,
-            baseColor: new THREE.Color('#00d2ff'),
-            currentPattern: 'text',
-            
-            // Variabel deteksi
-            isHandDetected: false, 
-            
-            // 3 State Beban Transisi (0.0 -> 1.0)
-            weightAmbient: 1.0,
-            weightHand: 0.0,
-            weightPattern: 0.0,
-            
-            gestureOpenness: 1.0,      
-            targetGestureOpenness: 1.0, 
-            isGripped: false,
-            gripBlast: 0.0, // Untuk animasi ledakan partikel saat mengepal
-            
-            targetHandPosition: new THREE.Vector3(0, 0, 0),    
-            currentHandPosition: new THREE.Vector3(0, 0, 0),   
-            isTransitioning: false,
-            transitionProgress: 1.0,
-            cameraActive: false,
-            textPoints: [] 
-        };
+    <!-- Contact Modal -->
+    <div id="contact-modal" class="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 modal-blur opacity-0 pointer-events-none transition-opacity duration-500">
+        <div class="w-full max-w-xl bg-[#030303] border border-white/10 rounded-[2.5rem] p-8 md:p-12">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="font-display text-3xl font-black tracking-tighter uppercase">Get in touch</h2>
+                <button onclick="closeContact()" class="text-white/30 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <form class="space-y-6" onsubmit="handleContactSubmit(event)">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Your Name</label>
+                    <input type="text" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Email Address</label>
+                    <input type="email" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Message</label>
+                    <textarea rows="4" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-purple-600 text-white py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-purple-700 transition-all active:scale-95">Send Proposal</button>
+            </form>
+        </div>
+    </div>
 
-        // DOM Elements
-        const container = document.getElementById('canvas-container');
-        const patternSelect = document.getElementById('pattern-select');
-        const colorPicker = document.getElementById('color-picker');
-        const colorValue = document.getElementById('color-value');
-        const btnCamera = document.getElementById('btn-camera');
-        const pipContainer = document.getElementById('pip-container');
-        const videoElementPip = document.getElementById('video-pip');
-        const videoElementHidden = document.getElementById('input-video');
-        const canvasElement = document.getElementById('output-canvas');
-        const canvasCtx = canvasElement.getContext('2d');
-        const gestureBar = document.getElementById('gesture-bar');
-        const trackingStatus = document.getElementById('tracking-status');
-        const btnTogglePanel = document.getElementById('btn-toggle-panel');
-        const iconToggle = document.getElementById('icon-toggle');
-        const panelContent = document.getElementById('panel-content');
+    <!-- Custom Alert System -->
+    <div id="alert-box" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[300] bg-white text-black px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-widest opacity-0 pointer-events-none transition-all duration-300">
+        Message sent successfully
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Elements
+        const navbar = document.getElementById('navbar');
+        const navContainer = document.getElementById('nav-container');
+        const heroContent = document.getElementById('hero-content');
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuOverlay = document.getElementById('mobile-overlay');
+        const menuIconWrapper = document.getElementById('menu-icon-wrapper');
+        const alertBox = document.getElementById('alert-box');
+
+        let isMenuOpen = false;
+const title = document.getElementById("galaxyTitle");
+
+function createParticles() {
+    const text = title.innerText.replace(/\n/g, "");
+    title.innerHTML = "";
+
+    text.split("").forEach((char) => {
+        const span = document.createElement("span");
+        span.innerText = char === " " ? " " : char;
+        span.className = "inline-block transition-all duration-700";
+        title.appendChild(span);
+    });
+}
+
+createParticles();
+
+const letters = title.querySelectorAll("span");
+
+title.parentElement.addEventListener("mouseenter", () => {
+    letters.forEach((el, i) => {
+        const x = (Math.random() - 0.5) * 120;
+        const y = (Math.random() - 0.5) * 120;
+        const rot = (Math.random() - 0.5) * 360;
+
+        el.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg)`;
+        el.style.opacity = "0.2";
+        el.style.filter = "blur(2px)";
+    });
+});
+
+title.parentElement.addEventListener("mouseleave", () => {
+    letters.forEach((el) => {
+        el.style.transform = `translate(0px, 0px) rotate(0deg)`;
+        el.style.opacity = "1";
+        el.style.filter = "blur(0px)";
+    });
+});
         
-        const textInput = document.getElementById('custom-text-input');
-        const btnApplyText = document.getElementById('btn-apply-text');
-
-        // Three.js Setup
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050505, 0.002);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 18;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
-
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.enablePan = false;
-
-        const renderScene = new RenderPass(scene, camera);
-        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.threshold = 0.1;
-        bloomPass.strength = 1.2;
-        bloomPass.radius = 0.5;
-
-        const composer = new EffectComposer(renderer);
-        composer.addPass(renderScene);
-        composer.addPass(bloomPass);
-
-        // Latar Bintang
-        const starsGeom = new THREE.BufferGeometry();
-        const starsMat = new THREE.PointsMaterial({color: 0x88aaff, size: 0.05, transparent: true, opacity: 0.4});
-        const starsPts = [];
-        for(let i=0; i<4000; i++) {
-            starsPts.push((Math.random()-0.5)*150, (Math.random()-0.5)*150, (Math.random()-0.5)*100 - 30);
-        }
-        starsGeom.setAttribute('position', new THREE.Float32BufferAttribute(starsPts, 3));
-        const starField = new THREE.Points(starsGeom, starsMat);
-        scene.add(starField);
-
-        function generateTextPoints(text) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            canvas.width = 512; canvas.height = 256;
-
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.font = 'bold 100px "Segoe UI", Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
-            const points = [];
-
-            for (let y = 0; y < canvas.height; y += 3) {
-                for (let x = 0; x < canvas.width; x += 3) {
-                    const index = (y * canvas.width + x) * 4;
-                    if (data[index] > 128) {
-                        const pX = (x - canvas.width / 2) * 0.05;
-                        const pY = -(y - canvas.height / 2) * 0.05;
-                        const pZ = (Math.random() - 0.5) * 0.5;
-                        points.push(new THREE.Vector3(pX, pY, pZ));
-                    }
-                }
-            }
-            if (points.length === 0) points.push(new THREE.Vector3(0,0,0));
-            return points;
-        }
-
-        AppState.textPoints = generateTextPoints(textInput.value);
-
-        const Patterns = {
-            text: (index, total) => {
-                const pt = AppState.textPoints[index % AppState.textPoints.length];
-                return new THREE.Vector3(pt.x + (Math.random()-0.5)*0.1, pt.y + (Math.random()-0.5)*0.1, pt.z);
-            },
-            sphere: (index, total) => {
-                const phi = Math.acos(-1 + (2 * index) / total);
-                const theta = Math.sqrt(total * Math.PI) * phi;
-                const r = 5 + (Math.random() * 0.2);
-                return new THREE.Vector3(r * Math.cos(theta) * Math.sin(phi), r * Math.sin(theta) * Math.sin(phi), r * Math.cos(phi));
-            },
-            galaxy: (index, total) => {
-                const arms = 4;
-                const r = Math.random() * 8;
-                const a = Math.random() * Math.PI * 2;
-                const armAngle = (Math.floor(Math.random() * arms) / arms) * Math.PI * 2;
-                const spin = r * 0.5;
-                const finalAngle = armAngle + spin + (Math.random() * 0.5 - 0.25);
-                return new THREE.Vector3(Math.cos(finalAngle) * r, (Math.random() - 0.5) * (1.0 - r/8) * 2.0, Math.sin(finalAngle) * r);
-            },
-            dna: (index, total) => {
-                const height = 15;
-                const y = (Math.random() - 0.5) * height;
-                const phase = y * 1.0;
-                const strand = Math.random() > 0.5 ? 0 : Math.PI;
-                const r = 2.5 + (Math.random() * 0.2);
-                if (Math.random() > 0.9) {
-                    const rBridge = Math.random() * 2.5;
-                    const bridgeStrand = Math.random() > 0.5 ? 0 : Math.PI;
-                    return new THREE.Vector3(Math.cos(phase + bridgeStrand) * rBridge, y, Math.sin(phase + bridgeStrand) * rBridge);
-                }
-                return new THREE.Vector3(Math.cos(phase + strand) * r, y, Math.sin(phase + strand) * r);
-            }
-        };
-
-        let particleGeometry = new THREE.BufferGeometry();
-        let positions = new Float32Array(AppState.particleCount * 3);
-        let targets = new Float32Array(AppState.particleCount * 3);
-        let randoms = new Float32Array(AppState.particleCount * 3);
-
-        let handPositions = new Float32Array(AppState.particleCount * 3);
-        let ambientPositions = new Float32Array(AppState.particleCount * 3); // Untuk posisi melayang bebas
-        const planetIDs = new Float32Array(AppState.particleCount); // ID Planet untuk tabrakan
-        const assignedBone = new Uint8Array(AppState.particleCount);
-        const boneLerp = new Float32Array(AppState.particleCount);
-
-        for (let i = 0; i < AppState.particleCount; i++) {
-            const pt = Patterns[AppState.currentPattern](i, AppState.particleCount);
-            
-            positions[i * 3] = pt.x; positions[i * 3 + 1] = pt.y; positions[i * 3 + 2] = pt.z;
-            targets[i * 3] = pt.x; targets[i * 3 + 1] = pt.y; targets[i * 3 + 2] = pt.z;
-            
-            const u = Math.random() * Math.PI * 2;
-            const v = Math.acos(2 * Math.random() - 1);
-            randoms[i * 3] = Math.sin(v) * Math.cos(u);
-            randoms[i * 3 + 1] = Math.sin(v) * Math.sin(u);
-            randoms[i * 3 + 2] = Math.cos(v);
-
-            // Sebar partikel untuk mode "Kosong" (Dibuat 2 Planet yang bertabrakan)
-            const isPlanet1 = i % 2 === 0;
-            planetIDs[i] = isPlanet1 ? -1.0 : 1.0;
-
-            let rA, thetaA, phiA;
-            const randObj = Math.random();
-            
-            if (randObj > 0.4) {
-                // Inti planet padat (Sphere)
-                rA = 3.5 * Math.cbrt(Math.random()); 
-                thetaA = Math.random() * 2 * Math.PI;
-                phiA = Math.acos(2 * Math.random() - 1);
-            } else if (randObj > 0.1) {
-                // Cincin / Sabuk Asteroid
-                rA = 5 + Math.random() * 7;
-                thetaA = Math.random() * 2 * Math.PI;
-                phiA = (Math.PI / 2) + (Math.random() - 0.5) * 0.2;
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                menuOverlay.classList.add('open', 'pointer-events-auto');
+                menuIconWrapper.style.transform = 'translateY(-42px)';
+                document.body.style.overflow = 'hidden';
             } else {
-                // Debu bintang luas
-                rA = 12 * Math.random();
-                thetaA = Math.random() * 2 * Math.PI;
-                phiA = Math.acos(2 * Math.random() - 1);
+                menuOverlay.classList.remove('open', 'pointer-events-auto');
+                menuIconWrapper.style.transform = 'translateY(0)';
+                document.body.style.overflow = 'auto';
             }
-
-            // Posisi lokal partikel relatif terhadap inti planetnya
-            ambientPositions[i * 3] = rA * Math.sin(phiA) * Math.cos(thetaA);
-            ambientPositions[i * 3 + 1] = rA * Math.cos(phiA);
-            ambientPositions[i * 3 + 2] = rA * Math.sin(phiA) * Math.sin(thetaA);
-
-            assignedBone[i] = Math.floor(Math.random() * 21);
-            boneLerp[i] = Math.random();
         }
 
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particleGeometry.setAttribute('aTarget', new THREE.BufferAttribute(targets, 3));
-        particleGeometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
-        particleGeometry.setAttribute('aHandPos', new THREE.BufferAttribute(handPositions, 3)); 
-        particleGeometry.setAttribute('aAmbientPos', new THREE.BufferAttribute(ambientPositions, 3));
-        particleGeometry.setAttribute('aPlanetID', new THREE.BufferAttribute(planetIDs, 1)); // Atribut untuk tabrakan
+        menuToggle.addEventListener('click', toggleMenu);
 
-        const particleMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                uTime: { value: 0 },
-                uColor: { value: AppState.baseColor },
-                uScale: { value: 1.0 },       
-                uWeightAmbient: { value: 1.0 }, 
-                uWeightHand: { value: 0.0 }, 
-                uWeightPattern: { value: 0.0 }, 
-                uTransition: { value: 1.0 },  
-                uGripBlast: { value: 0.0 }, // Animasi ledakan
-                uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
-            },
-            vertexShader: `
-                uniform float uTime;
-                uniform float uScale;
-                uniform float uWeightAmbient;
-                uniform float uWeightHand;
-                uniform float uWeightPattern;
-                uniform float uTransition;
-                uniform float uGripBlast;
-                uniform float uPixelRatio;
-
-                attribute vec3 aTarget;
-                attribute vec3 aRandom;
-                attribute vec3 aHandPos;
-                attribute vec3 aAmbientPos;
-                attribute float aPlanetID;
-
-                varying float vAlpha;
-                varying float vHandWeight;
-                varying float vPatternWeight;
-                varying float vBlast;
-
-                void main() {
-                    vHandWeight = uWeightHand;
-                    vPatternWeight = uWeightPattern;
-                    vBlast = uGripBlast;
-                    
-                    // Transisi ubah pola dari menu
-                    vec3 morphedPos = mix(position, aTarget, uTransition);
-
-                    // POSISI 1: Pola Normal (Teks/Galaksi/Bola)
-                    vec3 normalPos = morphedPos;
-                    normalPos.x += sin(uTime * 1.5 + normalPos.y * 2.0) * 0.1;
-                    normalPos.y += cos(uTime * 1.2 + normalPos.z * 2.0) * 0.1;
-                    normalPos += aRandom * (uGripBlast * 2.5); // Dorongan keluar saat mengepal
-
-                    // POSISI 2: Partikel menyusun kerangka Jari/Tangan
-                    vec3 handPos = aHandPos + (aRandom * 0.025); 
-
-                    // POSISI 3: Tabrakan 2 Galaksi / Planet (Kosong/Ambient)
-                    vec3 localPos = aAmbientPos;
-                    
-                    // 1. Pusaran rotasi pada inti galaksinya
-                    float localDist = length(localPos.xz);
-                    float localSpin = uTime * (2.0 / (localDist + 0.5)) * aPlanetID;
-                    float sl = sin(localSpin); float cl = cos(localSpin);
-                    localPos = vec3(localPos.x * cl - localPos.z * sl, localPos.y, localPos.x * sl + localPos.z * cl);
-                    
-                    // 2. Jarak planet bertabrakan (bergerak mendekat dan menjauh via cosinus)
-                    float crashCycle = cos(uTime * 0.3); 
-                    float orbitDist = 15.0 * crashCycle;
-                    
-                    // 3. Putaran orbit global berdua
-                    float globalOrbit = uTime * 0.5;
-                    float sg = sin(globalOrbit); float cg = cos(globalOrbit);
-                    
-                    vec3 corePos = vec3(orbitDist * aPlanetID, sin(uTime * 1.5 + aPlanetID)*1.5, (orbitDist * 0.5) * aPlanetID);
-                    corePos = vec3(corePos.x * cg - corePos.z * sg, corePos.y, corePos.x * sg + corePos.z * cg);
-                    
-                    // 4. Efek ledakan partikel berserakan saat bertabrakan di tengah
-                    float distToCenter = length(corePos);
-                    if (distToCenter < 6.0) {
-                        float chaos = (6.0 - distToCenter) * 0.8;
-                        localPos += aRandom * chaos * sin(uTime * 15.0);
-                        localPos.y += sin(localPos.x * 15.0 + uTime) * chaos;
-                        localPos *= 1.0 + chaos * 0.2;
-                    }
-                    
-                    vec3 ambientPos = corePos + localPos;
-                    
-                    // Mix 3 posisi berdasarkan weight transisi aktif
-                    vec3 finalPos = (ambientPos * uWeightAmbient) + (handPos * uWeightHand) + (normalPos * uWeightPattern);
-                    finalPos *= uScale;
-
-                    vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
-                    
-                    // Ukuran titik partikel, membesar saat meledak
-                    gl_PointSize = (8.0 * uPixelRatio) / -mvPosition.z * (1.0 + uGripBlast * 2.0);
-                    vAlpha = clamp(1.0 - (mvPosition.z * 0.02), 0.2, 1.0);
-
-                    gl_Position = projectionMatrix * mvPosition;
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 uColor;
-                varying float vAlpha;
-                varying float vHandWeight;
-                varying float vPatternWeight;
-                varying float vBlast;
-
-                void main() {
-                    vec2 coord = gl_PointCoord - vec2(0.5);
-                    float dist = length(coord);
-                    
-                    if (dist > 0.5) discard;
-                    
-                    float intensity = pow(1.0 - (dist * 2.0), 1.5);
-                    
-                    // Warna plasma inti putih/kuning
-                    vec3 coreColor = vec3(1.0, 1.0, 0.8); 
-                    vec3 blastColor = vec3(1.0, 0.6, 0.1); 
-                    
-                    // Warnanya berubah tergantung fase partikelnya
-                    vec3 finalColor = mix(uColor, coreColor, vHandWeight * 0.8 + vPatternWeight * 0.5);
-                    finalColor = mix(finalColor, blastColor, vBlast); // Terapkan warna kilatan panas
-                    
-                    gl_FragColor = vec4(finalColor, intensity * vAlpha + (vHandWeight * 0.3) + (vBlast * 0.6));
-                }
-            `,
-            transparent: true,
-            depthWrite: false,
-            blending: THREE.AdditiveBlending
-        });
-
-        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
-        scene.add(particleSystem);
-
-        function changePattern(newPatternName) {
-            AppState.currentPattern = newPatternName;
-            AppState.isTransitioning = true;
-            AppState.transitionProgress = 0.0;
-            particleMaterial.uniforms.uTransition.value = 0.0;
-
-            const posAttr = particleGeometry.attributes.position;
-            const targetAttr = particleGeometry.attributes.aTarget;
-
-            for (let i = 0; i < posAttr.count; i++) {
-                posAttr.setXYZ(i, targetAttr.getX(i), targetAttr.getY(i), targetAttr.getZ(i));
-            }
-
-            for (let i = 0; i < AppState.particleCount; i++) {
-                const pt = Patterns[AppState.currentPattern](i, AppState.particleCount);
-                targetAttr.setXYZ(i, pt.x, pt.y, pt.z);
-            }
-
-            posAttr.needsUpdate = true;
-            targetAttr.needsUpdate = true;
+        // Showreel Controls
+        function openShowreel() {
+            const overlay = document.getElementById('showreel-overlay');
+            const video = document.getElementById('reel-video');
+            overlay.classList.remove('pointer-events-none');
+            overlay.classList.add('opacity-100');
+            video.play();
         }
 
-        // Fungsi menghitung seberapa kuat tangan mengepal
-        function calculateHandOpenness(landmarks) {
-            const wrist = landmarks[0];
-            const fingers = [
-                { tip: 8, mcp: 5 },   // Telunjuk
-                { tip: 12, mcp: 9 },  // Tengah
-                { tip: 16, mcp: 13 }, // Manis
-                { tip: 20, mcp: 17 }  // Kelingking
-            ];
-
-            let totalRatio = 0;
-            for(let i=0; i<fingers.length; i++) { 
-                const tip = landmarks[fingers[i].tip];
-                const mcp = landmarks[fingers[i].mcp];
-                
-                const tipDist = Math.hypot(wrist.x - tip.x, wrist.y - tip.y, wrist.z - tip.z);
-                const mcpDist = Math.hypot(wrist.x - mcp.x, wrist.y - mcp.y, wrist.z - mcp.z);
-                
-                if (mcpDist > 0) totalRatio += (tipDist / mcpDist);
-            }
-            
-            const avgRatio = totalRatio / 4.0;
-            const minRatio = 0.8; 
-            const maxRatio = 1.8; 
-            
-            let openness = (avgRatio - minRatio) / (maxRatio - minRatio);
-            openness = Math.max(0.0, Math.min(1.0, openness));
-            return openness * openness * (3 - 2 * openness); // Smoothstep
+        function closeShowreel() {
+            const overlay = document.getElementById('showreel-overlay');
+            const video = document.getElementById('reel-video');
+            overlay.classList.add('pointer-events-none');
+            overlay.classList.remove('opacity-100');
+            video.pause();
         }
 
-        let hands;
-        let cameraMP;
-
-        async function initCamera() {
-            if (AppState.cameraActive) return;
+        // Project Modal Controls
+        function openProject(title, desc) {
+            const modal = document.getElementById('project-modal');
+            const modalBox = modal.querySelector('div');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
             
-            if (window.isSecureContext === false) {
-                btnCamera.innerHTML = `Butuh HTTPS / Host Lokal`;
-                btnCamera.classList.add('bg-red-600', 'shadow-red-500/30');
-                trackingStatus.innerText = "Kamera butuh HTTPS.";
-                return;
-            }
-
-            btnCamera.innerHTML = `<svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memuat...`;
-            btnCamera.disabled = true;
-
-            try {
-                hands = new window.Hands({locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-                }});
-
-                hands.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.6,
-                    minTrackingConfidence: 0.6
-                });
-
-                hands.onResults(onHandResults);
-
-                const constraints = { video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" } };
-
-                navigator.mediaDevices.getUserMedia(constraints)
-                .then((stream) => {
-                    videoElementHidden.srcObject = stream;
-                    videoElementPip.srcObject = stream;
-                    
-                    cameraMP = new window.Camera(videoElementHidden, {
-                        onFrame: async () => { await hands.send({image: videoElementHidden}); },
-                        width: 320, height: 240
-                    });
-                    
-                    cameraMP.start();
-                    AppState.cameraActive = true;
-                    btnCamera.disabled = false;
-                    pipContainer.style.display = 'block';
-                    btnCamera.innerHTML = `Kamera Aktif`;
-                    btnCamera.classList.replace('bg-blue-600', 'bg-green-600');
-                    btnCamera.classList.replace('hover:bg-blue-500', 'hover:bg-green-500');
-                })
-                .catch(err => {
-                    console.error("Kamera error:", err);
-                    btnCamera.innerHTML = `Kamera Gagal`;
-                    btnCamera.disabled = false;
-                    btnCamera.classList.replace('bg-blue-600', 'bg-red-600');
-                });
-
-            } catch(e) { console.error(e); }
+            modal.classList.remove('pointer-events-none');
+            modal.classList.add('opacity-100');
+            modalBox.classList.remove('scale-95');
+            modalBox.classList.add('scale-100');
+            document.body.style.overflow = 'hidden';
         }
 
-        function onHandResults(results) {
-            canvasElement.width = videoElementPip.videoWidth || 100;
-            canvasElement.height = videoElementPip.videoHeight || 75;
-            canvasCtx.save();
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        function closeProject() {
+            const modal = document.getElementById('project-modal');
+            const modalBox = modal.querySelector('div');
+            modal.classList.add('pointer-events-none');
+            modal.classList.remove('opacity-100');
+            modalBox.classList.add('scale-95');
+            modalBox.classList.remove('scale-100');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Contact Controls
+        function openContact() {
+            const modal = document.getElementById('contact-modal');
+            modal.classList.remove('pointer-events-none');
+            modal.classList.add('opacity-100');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeContact() {
+            const modal = document.getElementById('contact-modal');
+            modal.classList.add('pointer-events-none');
+            modal.classList.remove('opacity-100');
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            closeContact();
+            showAlert('Proposal sent successfully!');
+            e.target.reset();
+        }
+
+        function showAlert(msg) {
+            alertBox.innerText = msg;
+            alertBox.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            alertBox.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                alertBox.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            }, 3000);
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrolled = window.scrollY > 50;
             
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                // (DIUBAH) Langsung set terdeteksi, tanpa mengukur genggaman
-                AppState.isHandDetected = true; 
-                
-                trackingStatus.innerText = "Tangan Terlacak";
-                trackingStatus.className = "mt-1 text-center text-[10px] font-mono text-green-400 leading-tight";
-                
-                const landmarks = results.multiHandLandmarks[0];
-                
-                window.drawConnectors(canvasCtx, landmarks, window.HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 1.5});
-                window.drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 0.5, radius: 1.5});
-                
-                // Deteksi Genggaman secara Realtime
-                AppState.targetGestureOpenness = calculateHandOpenness(landmarks);
-
-                const vFov = camera.fov * Math.PI / 180;
-                const viewportHeight = 2 * Math.tan(vFov / 2) * Math.abs(camera.position.z);
-                const viewportWidth = viewportHeight * (window.innerWidth / window.innerHeight);
-
-                const palm = landmarks[9];
-                const targetX = (0.5 - palm.x) * viewportWidth; 
-                const targetY = -(palm.y - 0.5) * viewportHeight;
-                
-                AppState.targetHandPosition.set(targetX, targetY, 0);
-
-                if (window.HAND_CONNECTIONS) {
-                    const handPosArray = particleGeometry.attributes.aHandPos.array;
-                    const connections = window.HAND_CONNECTIONS;
-                    const numCon = connections.length;
-
-                    for (let i = 0; i < AppState.particleCount; i++) {
-                        const boneIdx = assignedBone[i] % numCon;
-                        const bone = connections[boneIdx];
-                        const startNode = landmarks[bone[0]];
-                        const endNode = landmarks[bone[1]];
-                        
-                        let t = boneLerp[i];
-                        if (i % 4 === 0) t = 1.0; 
-                        if (i % 4 === 1) t = 0.0; 
-
-                        const x = startNode.x + (endNode.x - startNode.x) * t;
-                        const y = startNode.y + (endNode.y - startNode.y) * t;
-                        const z = startNode.z + (endNode.z - startNode.z) * t;
-
-                        const lx = (0.5 - x) * viewportWidth - targetX; 
-                        const ly = -(y - 0.5) * viewportHeight - targetY;
-                        const lz = -z * viewportWidth * 1.5; 
-
-                        handPosArray[i * 3] = lx;
-                        handPosArray[i * 3 + 1] = ly;
-                        handPosArray[i * 3 + 2] = lz;
-                    }
-                    particleGeometry.attributes.aHandPos.needsUpdate = true;
-                }
-
+            if (scrolled) {
+                navbar.classList.remove('py-8');
+                navbar.classList.add('py-4');
+                navContainer.classList.add('bg-black/60', 'backdrop-blur-xl', 'rounded-full', 'border', 'border-white/5', 'mx-4', 'md:mx-12', 'py-3', 'pr-4', 'pl-8');
             } else {
-                AppState.isHandDetected = false;
-                trackingStatus.innerText = "Mencari Tangan...";
-                trackingStatus.className = "mt-1 text-center text-[10px] font-mono text-yellow-500 animate-pulse leading-tight";
-                
-                AppState.targetGestureOpenness = 1.0;
-                AppState.targetHandPosition.set(0, 0, 0); // Kembali ke tengah
+                navbar.classList.add('py-8');
+                navbar.classList.remove('py-4');
+                navContainer.classList.remove('bg-black/60', 'backdrop-blur-xl', 'rounded-full', 'border', 'border-white/5', 'mx-4', 'md:mx-12', 'py-3', 'pr-4', 'pl-8');
             }
-            canvasCtx.restore();
-        }
 
-        // --- Event Listeners UI ---
-        btnApplyText.addEventListener('click', () => {
-            const newText = textInput.value.trim() || "KOSONG";
-            AppState.textPoints = generateTextPoints(newText);
-            
-            patternSelect.value = "text";
-            changePattern("text");
-        });
-        
-        textInput.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') btnApplyText.click();
+            // Parallax Effect
+            const yPos = window.scrollY * 0.3;
+            const opacity = Math.max(0, 1 - window.scrollY / 600);
+            heroContent.style.transform = `translateY(${yPos}px)`;
+            heroContent.style.opacity = opacity;
         });
 
-        btnTogglePanel.addEventListener('click', () => {
-            panelContent.classList.toggle('max-h-0');
-            panelContent.classList.toggle('max-h-[500px]');
-            panelContent.classList.toggle('opacity-0');
-            panelContent.classList.toggle('opacity-100');
-            panelContent.classList.toggle('mt-4');
-            iconToggle.classList.toggle('rotate-180');
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-            particleMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
-        });
-
-        patternSelect.addEventListener('change', (e) => {
-            changePattern(e.target.value);
-        });
-
-        colorPicker.addEventListener('input', (e) => {
-            const hex = e.target.value;
-            colorValue.innerText = hex;
-            AppState.baseColor.set(hex);
-            particleMaterial.uniforms.uColor.value = AppState.baseColor;
-        });
-
-        btnCamera.addEventListener('click', initCamera);
-
-        window.addEventListener('load', () => {
-            initCamera();
-        });
-
-        const clock = new THREE.Clock();
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const delta = clock.getDelta();
-            const time = clock.getElapsedTime();
-
-            controls.update();
-
-            particleMaterial.uniforms.uTime.value = time;
-
-            // Animasi transisi pindah pola (dari menu drop down)
-            if (AppState.isTransitioning) {
-                AppState.transitionProgress += delta * 1.5; 
-                if (AppState.transitionProgress >= 1.0) {
-                    AppState.transitionProgress = 1.0;
-                    AppState.isTransitioning = false;
+        const observerOptions = { threshold: 0.2 };
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
                 }
-                particleMaterial.uniforms.uTransition.value = AppState.transitionProgress;
-            }
+            });
+        }, observerOptions);
 
-            // --- ANIMASI TERBENTUKNYA TANGAN & EFEK LEDAKAN MENGEPAL ---
-            AppState.currentHandPosition.lerp(AppState.targetHandPosition, 5.0 * delta);
-            particleSystem.position.copy(AppState.currentHandPosition);
+        document.querySelectorAll('.reveal-on-scroll, .project-card').forEach(el => {
+            revealObserver.observe(el);
+        });
 
-            // Lerp Hand Openness (Penghalus data kamera)
-            AppState.gestureOpenness += (AppState.targetGestureOpenness - AppState.gestureOpenness) * (delta * 8.0);
-            
-            // Logika Mengepal
-            const wasGripped = AppState.isGripped;
-            AppState.isGripped = AppState.gestureOpenness < 0.35; // Batas mengepal
-
-            // Trigger efek ledakan persis saat jari mengepal penuh
-            if (AppState.isGripped && !wasGripped && AppState.isHandDetected) {
-                AppState.gripBlast = 1.0;
-            }
-            // Meredakan energi ledakan perlahan-lahan
-            AppState.gripBlast = THREE.MathUtils.lerp(AppState.gripBlast, 0.0, delta * 3.0);
-
-            // Logika 3 Fase (State Machine Transisi):
-            // 1. Tangan Tidak Ada -> Kosong melayang bebas (Ambient)
-            // 2. Tangan Terbuka -> Menyusun jari (Hand)
-            // 3. Tangan Mengepal -> Membentuk teks/pola (Pattern)
-            let tAmbient = 0.0, tHand = 0.0, tPattern = 0.0;
-            
-            if (!AppState.isHandDetected) {
-                tAmbient = 1.0;
-            } else {
-                if (AppState.isGripped) tPattern = 1.0;
-                else tHand = 1.0;
-            }
-
-            // Penghalusan transisi morphing grafik
-            const morphSpeed = AppState.isHandDetected ? 7.0 : 2.5;
-            AppState.weightAmbient += (tAmbient - AppState.weightAmbient) * (delta * morphSpeed);
-            AppState.weightHand += (tHand - AppState.weightHand) * (delta * morphSpeed);
-            AppState.weightPattern += (tPattern - AppState.weightPattern) * (delta * morphSpeed);
-
-            particleMaterial.uniforms.uScale.value = 1.0 + (AppState.gripBlast * 0.15); // Mengembang sesaat saat meledak
-            particleMaterial.uniforms.uWeightAmbient.value = AppState.weightAmbient;
-            particleMaterial.uniforms.uWeightHand.value = AppState.weightHand;
-            particleMaterial.uniforms.uWeightPattern.value = AppState.weightPattern;
-            particleMaterial.uniforms.uGripBlast.value = AppState.gripBlast;
-
-            // EFEK CAHAYA (BLOOM) Makin terang gila saat meledak
-            bloomPass.strength = 1.2 + (AppState.weightHand * 0.4) + (AppState.weightPattern * 0.6) + (AppState.gripBlast * 2.5);
-
-            // Update UI Bar Indikator Mengepal
-            gestureBar.style.width = `${Math.max(5, AppState.gestureOpenness * 100)}%`;
-            if (AppState.isGripped) gestureBar.className = "bg-red-500 h-full transition-all duration-75 shadow-[0_0_10px_red]";
-            else if (AppState.gestureOpenness < 0.7) gestureBar.className = "bg-yellow-400 h-full transition-all duration-75";
-            else gestureBar.className = "bg-blue-400 h-full transition-all duration-75";
-
-            // Animasi rotasi ambient
-            if (AppState.isHandDetected && !AppState.isGripped) {
-                // Tangan usahakan lurus menghadap kamera
-                particleSystem.rotation.y = THREE.MathUtils.lerp(particleSystem.rotation.y, 0, delta * 5);
-                particleSystem.rotation.x = THREE.MathUtils.lerp(particleSystem.rotation.x, 0, delta * 5);
-            } else {
-                if (AppState.currentPattern === 'text') {
-                    particleSystem.rotation.y = THREE.MathUtils.lerp(particleSystem.rotation.y, 0, delta * 2);
-                    particleSystem.rotation.x = THREE.MathUtils.lerp(particleSystem.rotation.x, 0, delta * 2);
-                } else {
-                    particleSystem.rotation.y += delta * 0.2; // Pola bola/galaksi berputar pelan
-                }
-            }
-            
-            starField.rotation.y -= delta * 0.02;
-
-            composer.render();
-        }
-
-        animate();
 
     </script>
 </body>
