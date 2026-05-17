@@ -107,10 +107,11 @@
             opacity: 1;
         }
 
+        /* TULISAN BERGERAK DIJADIKAN LEBIH CEPAT (dari 25s menjadi 10s) */
         .marquee-animation {
             display: flex;
             gap: 5rem;
-            animation: marquee 25s linear infinite;
+            animation: marquee 10s linear infinite;
             will-change: transform;
         }
         
@@ -288,7 +289,7 @@
                 <div class="group relative flex flex-col items-center text-center">
                     <h1 id="galaxyTitle" class="font-display hero-title font-black pointer-events-none select-none">
                         <span class="line block text-white">UNREAL</span>
-                        <span class="line block italic text-transparent text-stroke"></span>
+                        <span class="line block italic text-transparent text-stroke">STUDIO</span>
                     </h1>
                 </div>
 
@@ -332,7 +333,6 @@
             </div>
         </div>
 
-        <!-- ── STREAMING_CHUNK: Structuring the Works/Portfolio section... -->
         <!-- ── WORK / PORTFOLIO SECTION ── -->
         <section id="work" class="relative mx-auto max-w-[1500px] overflow-hidden px-5 sm:px-8 md:px-12 py-20 sm:py-28 md:py-40">
             <div class="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-purple-500/10 blur-[140px]"></div>
@@ -497,7 +497,6 @@
                     </div>
                 </div>
 
-                <!-- ── STREAMING_CHUNK: Structuring the revamped compact Ethereal Studio workspace... -->
                 <!-- ── ETHEREAL REMOVER MODAL (HYBRID ENGINE WITH COMPACT INTERACTIVE STUDIO) ── -->
                 <div id="ethereal-remover-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 transition-all duration-300 overflow-y-auto">
                     <div class="absolute inset-0 bg-black/90 backdrop-blur-md animate-[fadeIn_0.3s_ease]" onclick="closeEtherealRemoverModal()"></div>
@@ -509,7 +508,7 @@
                         <!-- Tight Header -->
                         <div class="flex items-center justify-between mb-4 relative z-10">
                             <div>
-                                <h4 class="text-[9px] font-bold tracking-[0.3em] text-purple-400 uppercase">Ethereal Studio </h4>
+                                <h4 class="text-[9px] font-bold tracking-[0.3em] text-purple-400 uppercase">Ethereal Studio</h4>
                                 <h2 class="text-lg font-black tracking-tight text-white uppercase mt-0.5">COMPACT BACKGROUND SUITE</h2>
                             </div>
                             <button onclick="closeEtherealRemoverModal()" class="w-7 h-7 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all">
@@ -707,7 +706,6 @@
             </div>
         </section>
 
-        <!-- ── STREAMING_CHUNK: Integrating Labs/Bento sections... -->
         <!-- ── LABS / EXPERIMENTAL SECTION ── -->
         <section id="labs" class="relative mx-auto max-w-[1500px] px-5 sm:px-8 md:px-12 py-20 sm:py-28 md:py-36 overflow-hidden bg-[#030303] text-white">
             <div class="pointer-events-none absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-gradient-to-b from-purple-600/20 to-blue-600/0 blur-[140px]"></div>
@@ -763,21 +761,16 @@
                             </p>
                         </div>
 
-                        <a href="galaxy.html" class="group/cta inline-flex items-center gap-4 sm:gap-5 self-start md:self-end shrink-0">
-    <div class="relative overflow-hidden h-6">
-        <span class="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-white/60 transition-transform duration-500 ease-out group-hover/cta:-translate-y-full">
-            Explore Lab
-        </span>
-        <span class="absolute left-0 top-0 block translate-y-full text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-purple-400 transition-transform duration-500 ease-out group-hover/cta:translate-y-0">
-            Enter Galaxy
-        </span>
-    </div>
-
-    <div class="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/cta:scale-110 group-hover/cta:rotate-45 group-hover/cta:border-purple-500/40 group-hover/cta:bg-purple-500/20 shadow-lg">
-        <div class="absolute inset-0 rounded-full bg-purple-500/30 blur-md opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500"></div>
-        <i data-lucide="arrow-up-right" class="relative h-4 w-4 text-white group-hover/cta:text-purple-300 transition-colors"></i>
-    </div>
-</a>
+                        <a href="#" class="group/cta inline-flex items-center gap-4 sm:gap-5 self-start md:self-end shrink-0">
+                            <div class="relative overflow-hidden h-6">
+                                <span class="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-white/60 transition-transform duration-500 ease-out group-hover/cta:-translate-y-full">Explore Lab</span>
+                                <span class="absolute left-0 top-0 block translate-y-full text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-purple-400 transition-transform duration-500 ease-out group-hover/cta:translate-y-0">Enter Galaxy</span>
+                            </div>
+                            <div class="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/cta:scale-110 group-hover/cta:rotate-45 group-hover/cta:border-purple-500/40 group-hover/cta:bg-purple-500/20 shadow-lg">
+                                <div class="absolute inset-0 rounded-full bg-purple-500/30 blur-md opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500"></div>
+                                <i data-lucide="arrow-up-right" class="relative h-4 w-4 text-white group-hover/cta:text-purple-300 transition-colors"></i>
+                            </div>
+                        </a>
                     </div>
 
                     <!-- Noise Overlay -->
@@ -874,7 +867,7 @@
     <!-- ======================================================= -->
     <!--  JAVASCRIPT CONTROLLER MODULE                           -->
     <!-- ======================================================= -->
-    <!-- ── STREAMING_CHUNK: Initializing controllers and defining active state arrays... ── -->
+    <!-- ── STREAMING_CHUNK: Refining Vortex Media Downloader architecture... ── -->
     <script>
         // Initialize Icons
         if (typeof lucide !== 'undefined') {
@@ -968,7 +961,6 @@
             });
         }
 
-        // ── STREAMING_CHUNK: Managing menu clicks and system overlays... ──
         // ── Overlay Nav Controls ──
         let isMenuOpen = false;
         function toggleMenu() {
@@ -1098,7 +1090,7 @@
         });
 
         // =======================================================
-        //  VORTEX DOWNLOADER SYSTEM                               
+        //  VORTEX DOWNLOADER SYSTEM WITH MOBILE BYPASS
         // =======================================================
         function openVortexModal() {
             const modal = document.getElementById('vortex-modal');
@@ -1154,8 +1146,9 @@
                     document.getElementById('vortex-author').innerText = `@${data.author.unique_id}`;
                     document.getElementById('vortex-title').innerText = data.title || "VORTEX CAPTURE";
                     
-                    document.getElementById('vortex-dl-video').onclick = () => triggerBlobDownload(data.play, `Vortex_${data.id}.mp4`);
-                    document.getElementById('vortex-dl-audio').onclick = () => triggerBlobDownload(data.music, `Vortex_Audio_${data.id}.mp3`);
+                    // Bind smart downloads that prevent iframe popup-blocking on your friend's phone
+                    document.getElementById('vortex-dl-video').onclick = () => handleMobileSafeDownload(data.play, `Vortex_${data.id}.mp4`);
+                    document.getElementById('vortex-dl-audio').onclick = () => handleMobileSafeDownload(data.music, `Vortex_Audio_${data.id}.mp3`);
 
                     loader.classList.add('hidden');
                     resultBox.classList.remove('hidden');
@@ -1172,27 +1165,45 @@
             }
         }
 
-        async function triggerBlobDownload(url, filename) {
-            showVortexStatus("DOWNLOADING DATA...", "success");
-            try {
-                const res = await fetch(url);
-                const blob = await res.blob();
-                const bUrl = window.URL.createObjectURL(blob);
-                
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = bUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                
-                window.URL.revokeObjectURL(bUrl);
-                document.body.removeChild(a);
-                showVortexStatus("UNDUHAN SELESAI", "success");
-            } catch (e) {
-                window.open(url, '_blank');
-                showVortexStatus("TAB BARU DIALIRKAN", "success");
+        function handleMobileSafeDownload(url, filename) {
+            showVortexStatus("MEMPROSES UNDUHAN...", "success");
+
+            // Detect if iOS (iPhone/iPad) or inside an In-App browser (Instagram, WhatsApp, FB, WeChat, Twitter, TikTok)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isInApp = /Instagram|FBAN|FBAV|Twitter|TikTok|MicroMessenger|WhatsApp/.test(navigator.userAgent);
+
+            if (isIOS || isInApp) {
+                // iPhone/In-App browsers block programmatical 'blob downloaders' entirely.
+                // We bypass it by directly redirecting to the media link, allowing standard Apple Safari download prompts or 'Hold to Save'.
+                window.location.href = url;
+                showVortexStatus("DIBUKA DI HALAMAN UTAMA (TEKAN LAMA UNTUK MENYIMPAN)", "success");
+                return;
             }
+
+            // Standard Blob Downloader for Desktop and Android (saves file instantly to downloads folder)
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error();
+                    return res.blob();
+                })
+                .then(blob => {
+                    const bUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = bUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    window.URL.revokeObjectURL(bUrl);
+                    document.body.removeChild(a);
+                    showVortexStatus("UNDUHAN SELESAI", "success");
+                })
+                .catch(() => {
+                    // Fallback to direct tab opening if blob generation fails or is blocked by CORS/sandboxes
+                    window.open(url, '_blank');
+                    showVortexStatus("DIALIRKAN KE TAB BARU", "success");
+                });
         }
 
         function showVortexStatus(msg, type) {
@@ -1773,6 +1784,7 @@
             applyEdgeAndGlowFilters();
         }
 
+        // Apply visual updates to canvas
         function toggleNeonGlow() {
             hasNeonGlow = document.getElementById('neon-glow-toggle').checked;
             applyEdgeAndGlowFilters();
