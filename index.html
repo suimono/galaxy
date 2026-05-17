@@ -1147,9 +1147,8 @@
                     document.getElementById('vortex-title').innerText = data.title || "VORTEX CAPTURE";
                     
                     // Bind smart downloads that prevent iframe popup-blocking on your friend's phone
-                    document.getElementById('vortex-dl-video').onclick = () => handleMobileSafeDownload(data.play, `Vortex_${data.id}.mp4`);
-                    document.getElementById('vortex-dl-audio').onclick = () => handleMobileSafeDownload(data.music, `Vortex_Audio_${data.id}.mp3`);
-
+                    document.getElementById('vortex-dl-video').onclick = () => handleMobileSafeDownload(data.hdplay || data.play, `Vortex_${data.id}.mp4`);
+document.getElementById('vortex-dl-audio').onclick = () => handleMobileSafeDownload(data.music_info?.play || data.music, `Vortex_Audio_${data.id}.mp3`);
                     loader.classList.add('hidden');
                     resultBox.classList.remove('hidden');
                     showVortexStatus("PROTOKOL BERHASIL DIEKSTRAKSI", "success");
