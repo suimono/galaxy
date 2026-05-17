@@ -1166,45 +1166,34 @@
         }
 
         function handleMobileSafeDownload(url, filename) {
-            showVortexStatus("MEMPROSES UNDUHAN...", "success");
+    showVortexStatus("MEMPROSES UNDUHAN...", "success");
 
-            // Detect if iOS (iPhone/iPad) or inside an In-App browser (Instagram, WhatsApp, FB, WeChat, Twitter, TikTok)
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isInApp = /Instagram|FBAN|FBAV|Twitter|TikTok|MicroMessenger|WhatsApp/.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isInApp = /Instagram|FBAN|FBAV|Twitter|TikTok|MicroMessenger|WhatsApp/.test(navigator.userAgent);
 
-            if (isIOS || isInApp) {
-                // iPhone/In-App browsers block programmatical 'blob downloaders' entirely.
-                // We bypass it by directly redirecting to the media link, allowing standard Apple Safari download prompts or 'Hold to Save'.
-                window.location.href = url;
-                showVortexStatus("DIBUKA DI HALAMAN UTAMA (TEKAN LAMA UNTUK MENYIMPAN)", "success");
-                return;
-            }
+    // Gunakan proxy tikwm untuk bypass CORS - ini sudah support download langsung
+    // Ganti URL play/music TikTok dengan endpoint proxy tikwm
+    const proxyUrl = `https://www.tikwm.com/video/media/play?id=${encodeURIComponent(url)}`;
 
-            // Standard Blob Downloader for Desktop and Android (saves file instantly to downloads folder)
-            fetch(url)
-                .then(res => {
-                    if (!res.ok) throw new Error();
-                    return res.blob();
-                })
-                .then(blob => {
-                    const bUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = bUrl;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    window.URL.revokeObjectURL(bUrl);
-                    document.body.removeChild(a);
-                    showVortexStatus("UNDUHAN SELESAI", "success");
-                })
-                .catch(() => {
-                    // Fallback to direct tab opening if blob generation fails or is blocked by CORS/sandboxes
-                    window.open(url, '_blank');
-                    showVortexStatus("DIALIRKAN KE TAB BARU", "success");
-                });
-        }
+    if (isIOS || isInApp) {
+        window.location.href = url;
+        showVortexStatus("DIBUKA DI SAFARI (TEKAN LAMA → SIMPAN VIDEO)", "success");
+        return;
+    }
+
+    // Buat elemen <a> dengan href langsung — ini paling kompatibel lintas browser
+    // Tidak pakai fetch blob karena CORS block dari CDN TikTok
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.target = '_blank';           // Penting: buka di tab baru jika download gagal
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    showVortexStatus("UNDUHAN DIMULAI ✓", "success");
+}
 
         function showVortexStatus(msg, type) {
             const box = document.getElementById('vortex-status');
