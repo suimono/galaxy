@@ -235,108 +235,52 @@
 
     <div class="noise-bg"></div>
     <div class="grid-bg"></div>
-<!-- ══════════════════════════════════════════
-     NAVIGATION BAR
-══════════════════════════════════════════ -->
-<nav id="navbar"
-    class="fixed top-0 left-0 z-[100] w-full transition-all duration-500">
 
-    <div id="nav-container"
-        class="relative mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 md:px-10">
+    <!-- ══════════════════════════════════════════
+         NAVIGATION BAR
+    ══════════════════════════════════════════ -->
+    <nav id="navbar" class="fixed left-0 top-0 z-[100] w-full transition-all duration-700">
+        <div id="nav-container" class="relative mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 sm:px-8 sm:py-5 md:px-12 transition-all duration-500">
 
-        <!-- LOGO -->
-        <div
-            onclick="window.scrollTo(0,0)"
-            class="font-display text-lg sm:text-xl font-bold tracking-tighter cursor-pointer z-50 select-none">
+            <div class="font-display text-base sm:text-xl font-bold tracking-tighter cursor-pointer z-50" onclick="window.scrollTo(0,0)">
+                UNREAL<span class="text-purple-500">_</span>STUDIO
+            </div>
 
-            UNREAL<span class="text-purple-500">_</span>STUDIO
-        </div>
+            <!-- Center pill nav: hidden on mobile -->
+            <div class="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-full justify-center px-4 pointer-events-none">
+                <div class="bg-black rounded-2xl md:rounded-3xl px-6 py-3 md:px-8 flex items-center justify-center max-w-max border border-[#E1E0CC]/10 shadow-lg pointer-events-auto">
+                    <div class="flex items-center gap-4 sm:gap-6 md:gap-10 lg:gap-14">
+                        <a href="#story" class="text-[10px] sm:text-xs md:text-sm tracking-wider uppercase font-medium transition-colors hover:text-[#E1E0CC]" style="color: rgba(225, 224, 204, 0.8)">Our story</a>
+                        <a href="#collective" class="text-[10px] sm:text-xs md:text-sm tracking-wider uppercase font-medium transition-colors hover:text-[#E1E0CC]" style="color: rgba(225, 224, 204, 0.8)">Collective</a>
+                        <button onclick="triggerToast('Katalog sesi lokakarya akan dimulai pada Musim Gugur 2026.')" class="text-[10px] sm:text-xs md:text-sm tracking-wider uppercase font-medium transition-colors hover:text-[#E1E0CC] cursor-pointer" style="color: rgba(225, 224, 204, 0.8)">Workshops</button>
+                        <a href="#programs" class="text-[10px] sm:text-xs md:text-sm tracking-wider uppercase font-medium transition-colors hover:text-[#E1E0CC]" style="color: rgba(225, 224, 204, 0.8)">Programs</a>
+                        <button onclick="openDrawer('inquiry')" class="text-[10px] sm:text-xs md:text-sm tracking-wider uppercase font-medium transition-colors hover:text-[#E1E0CC] cursor-pointer" style="color: rgba(225, 224, 204, 0.8)">Inquiries</button>
+                    </div>
+                </div>
+            </div>
 
-        <!-- CENTER GLASS NAV -->
-        <div
-            class="absolute left-1/2 top-1/2 hidden md:flex -translate-x-1/2 -translate-y-1/2 z-40">
-
-            <div
-                class="
-                flex items-center gap-8 lg:gap-12
-                px-7 py-3
-                rounded-full
-                border border-white/10
-                bg-white/5
-                backdrop-blur-xl
-                shadow-[0_8px_32px_rgba(0,0,0,0.35)]
-                ">
-
-                <a href="#story"
-                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white">
-                    Our story
-                </a>
-
-                <a href="#collective"
-                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white">
-                    Collective
-                </a>
-
-                <button
-                    onclick="triggerToast('Katalog sesi lokakarya akan dimulai pada Musim Gugur 2026.')"
-                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white cursor-pointer">
-
-                    Workshops
-                </button>
-
-                <a href="#programs"
-                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white">
-                    Programs
-                </a>
-
-                <button
-                    onclick="openDrawer('inquiry')"
-                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white cursor-pointer">
-
-                    Inquiries
+            <div class="flex items-center z-50">
+                <button id="menu-toggle" aria-label="Toggle menu"
+                    class="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-all duration-300 hover:border-purple-500/50 hover:bg-white/10 touch-manipulation">
+                    <div id="menu-icon-wrapper" class="relative flex h-[18px] w-[18px] items-center justify-center transition-transform duration-500">
+                        <i data-lucide="menu" class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-100 scale-100" id="icon-menu"></i>
+                        <i data-lucide="x" class="absolute h-[18px] w-[18px] text-white transition-all duration-300 opacity-0 scale-75" id="icon-close"></i>
+                    </div>
                 </button>
             </div>
+
         </div>
+    </nav>
 
-        <!-- MOBILE MENU BUTTON -->
-        <button
-            onclick="toggleMenu()"
-            class="md:hidden z-50 flex flex-col gap-1">
-
-            <span class="w-6 h-[2px] bg-white rounded-full"></span>
-            <span class="w-6 h-[2px] bg-white rounded-full"></span>
-            <span class="w-6 h-[2px] bg-white rounded-full"></span>
-        </button>
+    <!-- ══════════════════════════════════════════
+         MOBILE MENU OVERLAY
+    ══════════════════════════════════════════ -->
+    <div id="mobile-overlay" class="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-black/95 backdrop-blur-3xl opacity-0 pointer-events-none gap-4 sm:gap-8">
+        <a href="#work"    onclick="toggleMenu()" class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">WORKS</a>
+        <a href="#labs"    onclick="toggleMenu()" class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">LABS</a>
+        <a href="#contact" onclick="toggleMenu()" class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">CONTACT</a>
     </div>
-</nav>
 
-<!-- ══════════════════════════════════════════
-     MOBILE MENU OVERLAY
-══════════════════════════════════════════ -->
-<div id="mobile-overlay"
-    class="fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-black/95 backdrop-blur-3xl opacity-0 pointer-events-none transition-all duration-500">
-
-    <a href="#work"
-        onclick="toggleMenu()"
-        class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">
-
-        WORKS
-    </a>
-
-    <a href="#labs"
-        onclick="toggleMenu()"
-        class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">
-
-        LABS
-    </a>
-
-    <a href="#contact"
-        onclick="toggleMenu()"
-        class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">
-
-        CONTACT
-    </a>
-</div>
     <!-- ══════════════════════════════════════════
          MAIN CONTENT
     ══════════════════════════════════════════ -->
