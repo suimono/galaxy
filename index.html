@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -7,726 +7,1133 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>UNREAL_STUDIO | Digital Architects</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
+    <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Syne', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            dark: '#030303',
-                            purple: '#A855F7',
-                            cyan: '#06B6D4'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Icons & Animations -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <!-- Project Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
 
     <style>
-        /* Base & Resets */
+        /* ─── MOBILE OVERFLOW PREVENTION ─── */
         html, body {
             overflow-x: hidden;
-            background-color: #030303;
-            color: #ffffff;
-            -webkit-font-smoothing: antialiased;
+            max-width: 100vw;
+            -webkit-text-size-adjust: 100%;
         }
 
-        /* Noise Texture */
-        .noise-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0.035;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        /* ─── SAFE AREA SUPPORT (iPhone notch / Dynamic Island) ─── */
+        nav#navbar {
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+        footer#contact {
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem);
         }
 
-        /* Grid Background */
-        .grid-bg {
-            position: fixed;
-            inset: 0;
-            background-size: 50px 50px;
-            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-            pointer-events: none;
-            z-index: 0;
+        /* ─── PERFORMANCE: reduce blur cost on mobile ─── */
+        @media (max-width: 768px) {
+            .backdrop-blur-2xl  { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+            .backdrop-blur-3xl  { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+            .blur-\[140px\]     { filter: blur(80px); }
+            .blur-\[100px\]     { filter: blur(60px); }
+            .blur-\[1px\]       { filter: blur(1px); }
+
+            /* Disable heavy noise texture on mobile */
+            .noise-bg { display: none; }
+
+            /* Reduce grid-bg complexity */
+            .grid-bg { opacity: 0.3; }
         }
 
-        /* Text Utilities */
-        .text-stroke {
-            -webkit-text-stroke: 1px rgba(255,255,255,0.2);
-            color: transparent;
-        }
-        .text-stroke-footer {
-            -webkit-text-stroke: 1.5px rgba(255,255,255,0.8);
-            color: transparent;
-        }
-
-        /* Marquee Animation */
-        .marquee-container {
+        /* ─── MARQUEE: prevent overflow ─── */
+        .marquee-animation {
             display: flex;
             width: max-content;
-            animation: marquee 25s linear infinite;
+            animation: marquee 22s linear infinite;
+            will-change: transform;
         }
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #030303; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        /* Glassmorphism utilities */
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        @media (max-width: 480px) {
+            .marquee-animation { animation-duration: 16s; }
         }
 
-        /* Hide modal helper */
-        .modal-hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.95);
+        /* ─── HERO TITLE: fluid scaling ─── */
+        .hero-title {
+            font-size: clamp(3.5rem, 18vw, 12rem);
+            line-height: 0.88;
+            letter-spacing: -0.06em;
         }
-        
-        /* Video Crossfade Container */
-        .video-container video {
-            position: absolute;
-            inset: 0;
+
+        /* ─── POPUP CARDS: mobile override ─── */
+        @media (max-width: 768px) {
+            /* Disable hover popups on touch devices — they cause layout issues */
+            .group:hover > .pointer-events-none.absolute.z-50 {
+                display: none !important;
+            }
+
+            /* Project cards: full height touch-friendly */
+            .grid.grid-cols-1.gap-10.md\:grid-cols-2 {
+                gap: 1.25rem;
+            }
+            .group.relative.h-\[420px\] {
+                height: 260px;
+            }
+        }
+        @media (min-width: 480px) and (max-width: 768px) {
+            .group.relative.h-\[420px\] {
+                height: 320px;
+            }
+        }
+
+        /* ─── VORTEX / ETHEREAL MODALS: full-screen on mobile ─── */
+        @media (max-width: 640px) {
+            #vortex-modal > div.relative,
+            #remover-modal-content {
+                border-radius: 1.25rem;
+                max-height: 90dvh;
+                overflow-y: auto;
+            }
+            #vortex-modal {
+                padding: 0.75rem;
+                align-items: flex-end;
+            }
+            #ethereal-remover-modal {
+                padding: 0.5rem;
+                align-items: flex-end;
+            }
+            /* Stack ethereal panel vertically */
+            #remover-studio {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            #canvas-workspace-container {
+                max-height: 40vh;
+            }
+        }
+
+        /* ─── CONTACT MODAL: safe padding on small screens ─── */
+        @media (max-width: 640px) {
+            #contact-modal > div {
+                border-radius: 1.25rem;
+                padding: 1.5rem;
+            }
+        }
+
+        /* ─── TOUCH TARGETS: minimum 44px ─── */
+        @media (max-width: 1024px) {
+            button, a {
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+            }
+            /* Override for purely decorative/icon elements */
+            .play-btn, #menu-toggle {
+                min-height: unset;
+            }
+        }
+
+        /* ─── HERO CONTENT BOTTOM AREA ─── */
+        @media (max-width: 640px) {
+            .play-btn {
+                width: 5rem;
+                height: 5rem;
+            }
+            .play-btn svg { font-size: 7px; }
+        }
+
+        /* ─── FOOTER HEADLINE: fluid ─── */
+        footer h2 {
+            font-size: clamp(2rem, 10vw, 5.5rem);
+        }
+
+        /* ─── LABS BENTO CARD ─── */
+        @media (max-width: 640px) {
+            .bento-card { padding: 1.5rem !important; }
+            .bento-headline { font-size: clamp(1.4rem, 7vw, 2.5rem) !important; }
+        }
+
+        /* ─── NAV CENTER PILL: hide on <md, already hidden via Tailwind ─── */
+        /* Ensured via Tailwind hidden md:flex — no extra CSS needed */
+
+        /* ─── SHOWREEL OVERLAY ─── */
+        @media (max-width: 640px) {
+            #showreel-overlay > div {
+                padding: 0.5rem;
+            }
+            #showreel-overlay > div > div {
+                border-radius: 1rem;
+            }
+        }
+
+        /* ─── iOS: prevent bounce/overscroll bleeding through modals ─── */
+        .modal-open { overflow: hidden; touch-action: none; }
+
+        /* ─── Prevent SVG textPath overflow ─── */
+        .play-btn svg { overflow: visible; }
+
+        /* ─── VIDEO: always cover, no overflow ─── */
+        video { max-width: 100%; }
+
+        /* ─── SECTION OVERFLOW GUARD ─── */
+        section, footer { overflow-x: hidden; }
+
+        /* ─── WORK SECTION GRID on tablet ─── */
+        @media (min-width: 640px) and (max-width: 900px) {
+            .grid.grid-cols-1.gap-10.md\:grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+            .group.relative.h-\[420px\] {
+                height: 340px;
+            }
+        }
+
+        /* ─── MOBILE MENU OVERLAY: fix tap targets ─── */
+        #mobile-overlay a {
+            padding: 0.5rem 1rem;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ─── ETHEREAL CANVAS: responsive aspect ratio ─── */
+        #canvas-workspace-container {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: opacity 1s ease-in-out;
+        }
+        @media (max-width: 640px) {
+            #canvas-workspace-container {
+                aspect-ratio: 4/3;
+                max-height: 38vh;
+            }
+        }
+
+        /* ─── REMOVER MODAL LEFT PANEL: scrollable on short screens ─── */
+        @media (max-height: 700px) {
+            #remover-modal-content {
+                overflow-y: auto;
+                max-height: 95dvh;
+            }
+        }
+
+        /* ─── ALERT TOAST: mobile safe bottom ─── */
+        #alert-box {
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 2rem);
+            max-width: calc(100vw - 2rem);
+            white-space: normal;
+            text-align: center;
+        }
+
+        /* ─── POINTER EVENTS: popup cards desktop only ─── */
+        @media (hover: none) {
+            /* Touch devices: disable hover popups entirely */
+            .group .group-hover\:pointer-events-auto { pointer-events: none !important; }
+            .group:hover .pointer-events-none { opacity: 0 !important; }
         }
     </style>
 </head>
-<body class="selection:bg-brand-purple/30 min-h-screen">
+<body class="bg-[#030303] text-white selection:bg-purple-500/30 min-h-screen">
 
     <div class="noise-bg"></div>
     <div class="grid-bg"></div>
+<!-- ══════════════════════════════════════════
+     NAVIGATION BAR
+══════════════════════════════════════════ -->
+<nav id="navbar"
+    class="fixed top-0 left-0 z-[100] w-full transition-all duration-500">
 
-    <nav id="navbar" class="fixed left-0 top-0 z-[100] w-full transition-all duration-500 py-4 px-6 md:px-12">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <!-- Logo -->
-            <div class="font-display text-xl md:text-2xl font-bold tracking-tighter cursor-pointer z-50 hover:text-brand-purple transition-colors" onclick="window.scrollTo(0,0)">
-                UNREAL<span class="text-brand-purple">_</span>STUDIO
-            </div>
+    <div id="nav-container"
+        class="relative mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 md:px-10">
 
-            <!-- Desktop Menu (Pill) -->
-            <div class="hidden md:flex glass rounded-full px-8 py-3 items-center gap-8 shadow-2xl z-40">
-                <a href="#work" class="text-xs uppercase tracking-[0.2em] font-medium hover:text-brand-purple transition-colors">Works</a>
-                <a href="#labs" class="text-xs uppercase tracking-[0.2em] font-medium hover:text-brand-purple transition-colors">Labs</a>
-                <button onclick="ui.triggerToast('Workshop catalog available Fall 2026.')" class="text-xs uppercase tracking-[0.2em] font-medium hover:text-brand-purple transition-colors">Workshops</button>
-                <button onclick="ui.openModal('contact-modal')" class="text-xs uppercase tracking-[0.2em] font-medium text-brand-purple hover:text-white transition-colors">Inquiries</button>
-            </div>
+        <!-- LOGO -->
+        <div
+            onclick="window.scrollTo(0,0)"
+            class="font-display text-lg sm:text-xl font-bold tracking-tighter cursor-pointer z-50 select-none">
 
-            <!-- Mobile Menu Toggle -->
-            <button class="md:hidden z-50 p-2 text-white" onclick="ui.toggleMobileMenu()">
-                <i data-lucide="menu" id="menu-icon" class="w-6 h-6"></i>
-            </button>
+            UNREAL<span class="text-purple-500">_</span>STUDIO
         </div>
-    </nav>
 
-    <!-- Mobile Menu Overlay -->
-    <div id="mobile-menu" class="fixed inset-0 z-[90] bg-brand-dark/95 backdrop-blur-xl flex flex-col items-center justify-center gap-8 transition-all duration-500 opacity-0 pointer-events-none">
-        <a href="#work" onclick="ui.toggleMobileMenu()" class="font-display text-5xl font-black tracking-tighter hover:text-brand-purple transition-colors">WORKS</a>
-        <a href="#labs" onclick="ui.toggleMobileMenu()" class="font-display text-5xl font-black tracking-tighter hover:text-brand-purple transition-colors">LABS</a>
-        <button onclick="ui.toggleMobileMenu(); ui.openModal('contact-modal')" class="font-display text-5xl font-black tracking-tighter hover:text-brand-purple transition-colors">CONTACT</button>
+        <!-- CENTER GLASS NAV -->
+        <div
+            class="absolute left-1/2 top-1/2 hidden md:flex -translate-x-1/2 -translate-y-1/2 z-40">
+
+            <div
+                class="
+                flex items-center gap-8 lg:gap-12
+                px-7 py-3
+                rounded-full
+                border border-white/10
+                bg-white/5
+                backdrop-blur-xl
+                shadow-[0_8px_32px_rgba(0,0,0,0.35)]
+                ">
+
+                <a href="#story"
+                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white">
+                    Our story
+                </a>
+
+                <a href="#collective"
+                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white">
+                    Collective
+                </a>
+
+                <button
+                    onclick="triggerToast('Katalog sesi lokakarya akan dimulai pada Musim Gugur 2026.')"
+                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white cursor-pointer">
+
+                    Workshops
+                </button>
+
+                <a href="#programs"
+                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white">
+                    Programs
+                </a>
+
+                <button
+                    onclick="openDrawer('inquiry')"
+                    class="text-xs tracking-[0.2em] uppercase text-white/70 transition hover:text-white cursor-pointer">
+
+                    Inquiries
+                </button>
+            </div>
+        </div>
+
+        <!-- MOBILE MENU BUTTON -->
+        <button
+            onclick="toggleMenu()"
+            class="md:hidden z-50 flex flex-col gap-1">
+
+            <span class="w-6 h-[2px] bg-white rounded-full"></span>
+            <span class="w-6 h-[2px] bg-white rounded-full"></span>
+            <span class="w-6 h-[2px] bg-white rounded-full"></span>
+        </button>
     </div>
+</nav>
 
+<!-- ══════════════════════════════════════════
+     MOBILE MENU OVERLAY
+══════════════════════════════════════════ -->
+<div id="mobile-overlay"
+    class="fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-black/95 backdrop-blur-3xl opacity-0 pointer-events-none transition-all duration-500">
+
+    <a href="#work"
+        onclick="toggleMenu()"
+        class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">
+
+        WORKS
+    </a>
+
+    <a href="#labs"
+        onclick="toggleMenu()"
+        class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">
+
+        LABS
+    </a>
+
+    <a href="#contact"
+        onclick="toggleMenu()"
+        class="font-display text-[clamp(2.5rem,12vw,4rem)] font-black tracking-tighter text-white/20 transition-all hover:text-white hover:italic">
+
+        CONTACT
+    </a>
+</div>
+    <!-- ══════════════════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════════════════ -->
     <main class="relative z-10">
-        <section class="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-32 pb-20">
-            
-            <!-- Dynamic Video Background -->
-            <div class="absolute inset-0 z-0 overflow-hidden video-container" id="hero-videos">
-                <video src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4" autoplay muted loop playsinline class="opacity-100"></video>
-                <video src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260503_144509_89e2d612-8af2-45c3-90f4-4831bc60715d.mp4" autoplay muted loop playsinline class="opacity-0"></video>
+
+        <!-- ── HERO SECTION ── -->
+        <section class="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-4 sm:px-8 pt-24 sm:pt-32 pb-12 sm:pb-20">
+            <!-- Background Stream Video -->
+            <div class="absolute inset-0 z-0 overflow-hidden">
+
+
+
+
+
+
+
+
+
+
+
+      <!-- VIDEO BACKGROUND -->
+<div class="absolute inset-0 overflow-hidden">
+
+    <!-- VIDEO 1 -->
+    <video 
+        id="bgVideo"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        class="absolute inset-0 h-full w-full object-cover brightness-110 contrast-110 saturate-125 transition-all duration-700"
+    >
+        <source 
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4"
+            type="video/mp4"
+        >
+    </video>
+
+    <!-- OVERLAY -->
+    <div class="absolute inset-0 bg-black/25"></div>
+
+    <!-- BUTTON LEFT -->
+    <button
+        onclick="prevVideo()"
+        class="absolute left-5 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all duration-300"
+    >
+        ‹
+    </button>
+
+    <!-- BUTTON RIGHT -->
+    <button
+        onclick="nextVideo()"
+        class="absolute right-5 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all duration-300"
+    >
+        ›
+    </button>
+
+</div>
+
+<script>
+
+const videos = [
+
+    "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4",
+
+    "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260503_144509_89e2d612-8af2-45c3-90f4-4831bc60715d.mp4"
+
+];
+
+let currentVideo = 0;
+
+const videoElement = document.getElementById("bgVideo");
+
+function changeVideo(index){
+
+    videoElement.style.opacity = "0";
+
+    setTimeout(() => {
+
+        videoElement.src = videos[index];
+
+        videoElement.load();
+
+        videoElement.play();
+
+        videoElement.style.opacity = "1";
+
+    }, 300);
+}
+
+function nextVideo(){
+
+    currentVideo++;
+
+    if(currentVideo >= videos.length){
+        currentVideo = 0;
+    }
+
+    changeVideo(currentVideo);
+}
+
+function prevVideo(){
+
+    currentVideo--;
+
+    if(currentVideo < 0){
+        currentVideo = videos.length - 1;
+    }
+
+    changeVideo(currentVideo);
+}
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 
-                <div class="absolute inset-0 bg-black/40"></div>
-                <div class="absolute inset-0 bg-gradient-to-b from-brand-dark/40 via-transparent to-brand-dark"></div>
+                <div class="absolute inset-0 bg-black/45"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06),transparent_60%)]"></div>
             </div>
 
-            <!-- Slider Controls -->
-            <div class="absolute z-20 flex gap-4 bottom-10 left-1/2 -translate-x-1/2 md:bottom-1/2 md:left-auto md:right-10 md:translate-x-0 md:-translate-y-1/2 md:flex-col">
-                <button onclick="videoSlider.prev()" class="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white hover:text-black transition-all">
-                    <i data-lucide="chevron-left" class="md:hidden"></i>
-                    <i data-lucide="chevron-up" class="hidden md:block"></i>
-                </button>
-                <button onclick="videoSlider.next()" class="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white hover:text-black transition-all">
-                    <i data-lucide="chevron-right" class="md:hidden"></i>
-                    <i data-lucide="chevron-down" class="hidden md:block"></i>
-                </button>
-            </div>
+            <div id="hero-content" class="relative z-10 w-full max-w-[1400px] transition-all duration-1000">
+                <div class="group relative flex flex-col items-center text-center">
+                    <h1 id="galaxyTitle" class="font-display hero-title font-black pointer-events-none select-none">
+                        <span class="line block text-white">UNREAL</span>
+                        <span class="line block italic text-transparent text-stroke"></span>
+                    </h1>
+                </div>
 
-            <!-- Hero Content -->
-            <div class="relative z-10 w-full max-w-7xl flex flex-col items-center">
-                <h1 class="font-display font-black text-center leading-[0.85] tracking-tight mb-8" style="font-size: clamp(4rem, 15vw, 12rem);">
-                    <span class="block text-white">UNREAL</span>
-                    <span class="block text-stroke italic">STUDIO</span>
-                </h1>
-
-                <div class="flex flex-col md:flex-row items-center justify-between w-full mt-10 gap-8">
-                    <p class="text-xs md:text-sm uppercase tracking-[0.2em] text-white/50 max-w-[300px] text-center md:text-left leading-relaxed">
-                        Crafting high-end digital solutions at the intersection of aesthetics and code.
+                <div class="mt-6 sm:mt-12 flex flex-col items-center gap-6 sm:gap-12 md:flex-row md:items-center md:justify-between md:w-full md:px-12">
+                    <p class="max-w-[260px] sm:max-w-[320px] text-[9px] sm:text-[11px] leading-relaxed uppercase tracking-[0.2em] text-white/40 text-center md:text-left">
+                        We craft high-end digital solutions at the intersection of aesthetics and code.
                     </p>
 
-                    <!-- Play Showreel Button -->
-                    <button onclick="ui.openModal('showreel-modal')" class="group relative flex h-24 w-24 md:h-32 md:w-32 items-center justify-center rounded-full bg-white text-black hover:bg-brand-purple hover:text-white transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(168,85,247,0.5)]">
-                        <div class="absolute inset-0 animate-[spin_10s_linear_infinite]">
-                            <svg viewBox="0 0 100 100" class="h-full w-full overflow-visible p-2">
-                                <path id="circlePath" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="none"/>
-                                <text class="fill-current text-[9.5px] font-bold tracking-widest uppercase">
-                                    <textPath href="#circlePath">Play Showreel • Watch Now •</textPath>
-                                </text>
-                            </svg>
-                        </div>
-                        <i data-lucide="play" class="w-6 h-6 ml-1 relative z-10"></i>
-                    </button>
+                    <!-- Circular Play Showreel Button -->
+<button 
+    onclick="window.location.href='galaxy.html'" 
+    aria-label="View showreel"
+    class="play-btn group relative flex h-20 w-20 sm:h-28 sm:w-28 items-center justify-center rounded-full bg-white text-black transition-all hover:bg-purple-600 hover:text-white active:scale-95 touch-manipulation shrink-0"
+>
+    <div class="absolute inset-0 animate-[spin_12s_linear_infinite] text-[8px] font-bold uppercase tracking-widest p-2">
+        <svg viewBox="0 0 100 100" class="h-full w-full overflow-visible">
+            <path 
+                id="circlePath" 
+                d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" 
+                fill="none" 
+            />
+            
+            <text class="fill-current text-[9px] font-semibold">
+                <textPath href="#circlePath">
+                    VIEW OUR SHOWREEL • PLAY NOW •
+                </textPath>
+            </text>
+        </svg>
+    </div>
+
+    <i data-lucide="play" class="w-4 h-4 sm:w-5 sm:h-5 fill-current"></i>
+</button>
                 </div>
             </div>
         </section>
 
-        <div class="relative overflow-hidden py-8 border-y border-white/10 bg-white/[0.02]">
-            <div class="marquee-container">
-                <!-- Double the content for smooth infinite loop -->
-                <div class="flex items-center gap-12 px-6">
-                    <span class="font-display text-2xl md:text-4xl font-bold tracking-tighter text-stroke uppercase">Digital Architects</span>
-                    <i data-lucide="asterisk" class="text-brand-purple w-6 h-6"></i>
-                    <span class="font-display text-2xl md:text-4xl font-bold tracking-tighter text-white/80 uppercase">Crafting Unreality</span>
-                    <i data-lucide="asterisk" class="text-brand-cyan w-6 h-6"></i>
+        <!-- ── MARQUEE TOP ── -->
+        <div class="relative overflow-hidden py-8 sm:py-16 border-y border-white/5 bg-white/[0.01]">
+            <div class="marquee-animation">
+                <div class="flex items-center gap-12 sm:gap-20 shrink-0">
+                    <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                    <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                    <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                    <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
                 </div>
-                <div class="flex items-center gap-12 px-6">
-                    <span class="font-display text-2xl md:text-4xl font-bold tracking-tighter text-stroke uppercase">Digital Architects</span>
-                    <i data-lucide="asterisk" class="text-brand-purple w-6 h-6"></i>
-                    <span class="font-display text-2xl md:text-4xl font-bold tracking-tighter text-white/80 uppercase">Crafting Unreality</span>
-                    <i data-lucide="asterisk" class="text-brand-cyan w-6 h-6"></i>
-                </div>
-                <div class="flex items-center gap-12 px-6">
-                    <span class="font-display text-2xl md:text-4xl font-bold tracking-tighter text-stroke uppercase">Digital Architects</span>
-                    <i data-lucide="asterisk" class="text-brand-purple w-6 h-6"></i>
-                    <span class="font-display text-2xl md:text-4xl font-bold tracking-tighter text-white/80 uppercase">Crafting Unreality</span>
-                    <i data-lucide="asterisk" class="text-brand-cyan w-6 h-6"></i>
+                <div class="flex items-center gap-12 sm:gap-20 shrink-0">
+                    <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                    <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                    <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                    <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
                 </div>
             </div>
         </div>
 
-        <section id="work" class="relative max-w-7xl mx-auto px-6 py-24 md:py-40">
-            <!-- Glow Effect -->
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] bg-brand-purple/10 blur-[120px] pointer-events-none rounded-full"></div>
+        <!-- ══════════════════════════════════════════
+             WORK / PORTFOLIO SECTION
+        ══════════════════════════════════════════ -->
+        <section id="work" class="relative mx-auto max-w-[1500px] overflow-hidden px-4 sm:px-8 md:px-12 py-16 sm:py-28 md:py-40">
+            <div class="pointer-events-none absolute left-1/2 top-0 h-[300px] w-[300px] sm:h-[500px] sm:w-[500px] -translate-x-1/2 rounded-full bg-purple-500/10 blur-[80px] sm:blur-[140px]"></div>
 
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 md:mb-24 relative z-10 gs-reveal">
-                <div>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-brand-purple mb-4">Portfolio Index</p>
-                    <h2 class="font-display font-black leading-none tracking-tighter" style="font-size: clamp(3rem, 8vw, 6rem);">
-                        UNREAL <br/><span class="text-white/30">EXPERIENCES</span>
+            <!-- Section Header -->
+            <div class="mb-10 sm:mb-24 flex flex-col gap-6 sm:gap-10 md:flex-row md:items-end md:justify-between">
+                <div class="reveal-on-scroll max-w-3xl">
+                    <p class="mb-3 sm:mb-5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.6em] text-purple-400">Portfolio Index 2026</p>
+                    <h2 class="font-display font-black leading-[0.9] tracking-[-0.06em]" style="font-size: clamp(2rem, 8vw, 6rem);">
+                        UNREAL <br /><span class="text-white/30">EXPERIENCES</span>
                     </h2>
                 </div>
-                <p class="text-xs md:text-sm uppercase tracking-[0.1em] text-white/40 max-w-xs leading-relaxed">
+                <p class="reveal-on-scroll max-w-sm text-[10px] sm:text-[11px] uppercase leading-loose tracking-[0.25em] text-white/40">
                     A curated collection of immersive digital experiences blending motion, interaction, and futuristic aesthetics.
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 relative z-10">
-                <!-- Card 1: Vortex -->
-                <div class="group relative rounded-3xl overflow-hidden glass aspect-square md:aspect-[4/5] cursor-pointer gs-reveal" onclick="ui.openModal('vortex-modal')">
-                    <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-all duration-700 group-hover:scale-105">
-                        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_055001_8e16d972-3b2b-441c-86ad-2901a54682f9.mp4" type="video/mp4">
-                    </video>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-                    
-                    <div class="absolute inset-0 p-8 flex flex-col justify-between">
-                        <div class="flex gap-3">
-                            <span class="glass px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-medium border-brand-purple/30 text-brand-purple">Extraction</span>
-                        </div>
-                        <div>
-                            <h3 class="font-display text-4xl md:text-5xl font-black mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">VORTEX</h3>
-                            <p class="text-sm text-white/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">High-speed media extraction engine.</p>
-                            
-                            <button class="mt-6 flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-brand-purple hover:text-white transition-colors">
-                                Launch Tool <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                            </button>
-                        </div>
+            <!-- Projects -->
+            <div class="mx-auto max-w-6xl py-8 sm:py-20 px-0 sm:px-4">
+
+                <!-- SECTION HEADER -->
+                <div class="mb-8 flex items-center gap-4">
+                    <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.35em] text-white/60">
+                        Explore Projects
+                    </span>
+                    <div class="h-[1px] w-8 sm:w-10 bg-gradient-to-r from-purple-400/80 to-transparent"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="h-2 w-2 rounded-full bg-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.9)]"></div>
+                        <div class="h-2 w-2 rounded-full bg-cyan-400/70"></div>
+                        <div class="h-2 w-2 rounded-full bg-white/20"></div>
                     </div>
                 </div>
 
-                <!-- Card 2: Ethereal -->
-                <div class="group relative rounded-3xl overflow-hidden glass aspect-square md:aspect-[4/5] cursor-pointer gs-reveal md:mt-16" onclick="ui.openModal('ethereal-modal')">
-                    <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-all duration-700 group-hover:scale-105">
-                        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260429_115139_0fc6bd3d-3631-4d26-ab9b-28293887dcc9.mp4" type="video/mp4">
-                    </video>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-                    
-                    <div class="absolute inset-0 p-8 flex flex-col justify-between">
-                        <div class="flex gap-3">
-                            <span class="glass px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-medium border-brand-cyan/30 text-brand-cyan">AI Vision</span>
+                <!-- PROJECTS GRID -->
+                <div class="grid grid-cols-1 gap-5 sm:gap-10 md:grid-cols-2">
+
+                    <!-- CARD 01: VORTEX -->
+                    <div class="group relative overflow-visible" style="height: clamp(220px, 50vw, 420px);">
+
+                        <!-- CARD -->
+                        <div class="relative h-full cursor-pointer overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border border-white/10 bg-[#070707] transition-all duration-700 hover:border-purple-500/30">
+                            <video autoplay muted loop playsinline class="absolute inset-0 h-full w-full object-cover opacity-60 transition-all duration-[2000ms] group-hover:scale-105">
+                                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_055001_8e16d972-3b2b-441c-86ad-2901a54682f9.mp4" type="video/mp4">
+                            </video>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                            <div class="relative z-20 flex h-full flex-col justify-end p-5 sm:p-8">
+                                <div class="mb-3 sm:mb-5 flex gap-2 sm:gap-3 flex-wrap">
+                                    <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-2.5 py-1 text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-purple-300">TikTok</span>
+                                    <span class="rounded-full border border-purple-500/20 bg-purple-500/10 px-2.5 py-1 text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-purple-300">Instagram</span>
+                                </div>
+                                <h2 class="font-black tracking-[-0.07em] text-white transition-all duration-500 group-hover:translate-y-[-10px]" style="font-size: clamp(2rem, 8vw, 3.5rem);">
+                                    VORTEX
+                                </h2>
+                                <!-- Mobile-only CTA (replaces hover popup) -->
+                                <button onclick="openVortexModal()" class="mt-3 md:hidden self-start rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2.5 text-[9px] uppercase tracking-[0.3em] text-purple-300 transition-all active:bg-purple-500/20 touch-manipulation">
+                                    Launch Downloader
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="font-display text-4xl md:text-5xl font-black mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">ETHEREAL</h3>
-                            <p class="text-sm text-white/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">Neural segmentation & background suite.</p>
-                            
-                            <button class="mt-6 flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-brand-cyan hover:text-white transition-colors">
-                                Launch Studio <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                            </button>
+
+                        <!-- DESKTOP HOVER POPUP (hidden on touch devices via CSS) -->
+                        <div class="pointer-events-none absolute left-1/2 top-1/2 z-50 w-[760px] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 scale-90 opacity-0 transition-all duration-500 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100 hidden md:block">
+                            <div class="overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#050505]/95 shadow-[0_0_120px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+                                <div class="relative h-[340px] overflow-hidden">
+                                    <video autoplay muted loop playsinline class="h-full w-full object-cover">
+                                        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_055001_8e16d972-3b2b-441c-86ad-2901a54682f9.mp4" type="video/mp4">
+                                    </video>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+                                    <div class="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white cursor-pointer">✕</div>
+                                </div>
+                                <div class="p-8">
+                                    <h2 class="text-6xl font-black tracking-[-0.08em] text-white">VORTEX</h2>
+                                    <p class="mt-5 max-w-xl text-white/60 leading-relaxed">
+                                        High-speed extraction engine for TikTok, Instagram, and modern media platforms.
+                                    </p>
+                                    <button onclick="openVortexModal()" class="mt-8 rounded-full border border-purple-500/20 bg-purple-500/10 px-7 py-4 text-[11px] uppercase tracking-[0.3em] text-purple-300 transition-all hover:bg-purple-500/20">
+                                        Launch Downloader
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+
+                    </div>
+
+                    <!-- CARD 02: ETHEREAL -->
+                    <div class="group relative overflow-visible" style="height: clamp(220px, 50vw, 420px);">
+
+                        <!-- CARD -->
+                        <div class="relative h-full cursor-pointer overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border border-white/10 bg-[#070707] transition-all duration-700 hover:border-cyan-500/30">
+                            <video autoplay muted loop playsinline class="absolute inset-0 h-full w-full object-cover opacity-60 transition-all duration-[2000ms] group-hover:scale-105">
+                                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260429_115139_0fc6bd3d-3631-4d26-ab9b-28293887dcc9.mp4" type="video/mp4">
+                            </video>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                            <div class="relative z-20 flex h-full flex-col justify-end p-5 sm:p-8">
+                                <div class="mb-3 sm:mb-5 flex gap-2 sm:gap-3 flex-wrap">
+                                    <span class="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-cyan-300">AI Vision</span>
+                                    <span class="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-cyan-300">Studio</span>
+                                </div>
+                                <h2 class="font-black tracking-[-0.07em] text-white transition-all duration-500 group-hover:translate-y-[-10px]" style="font-size: clamp(2rem, 8vw, 3.5rem);">
+                                    ETHEREAL
+                                </h2>
+                                <!-- Mobile-only CTA -->
+                                <button onclick="openEtherealRemoverModal()" class="mt-3 md:hidden self-start rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2.5 text-[9px] uppercase tracking-[0.3em] text-cyan-300 transition-all active:bg-cyan-500/20 touch-manipulation">
+                                    Launch Remover
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- DESKTOP HOVER POPUP -->
+                        <div class="pointer-events-none absolute left-1/2 top-1/2 z-50 w-[760px] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 scale-90 opacity-0 transition-all duration-500 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100 hidden md:block">
+                            <div class="overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#050505]/95 shadow-[0_0_120px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+                                <div class="relative h-[340px] overflow-hidden">
+                                    <video autoplay muted loop playsinline class="h-full w-full object-cover">
+                                        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260429_115139_0fc6bd3d-3631-4d26-ab9b-28293887dcc9.mp4" type="video/mp4">
+                                    </video>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+                                    <div class="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white cursor-pointer">✕</div>
+                                </div>
+                                <div class="p-8">
+                                    <h2 class="text-6xl font-black tracking-[-0.08em] text-white">ETHEREAL</h2>
+                                    <p class="mt-5 max-w-xl text-white/60 leading-relaxed">
+                                        AI-powered cinematic editing and neural segmentation system.
+                                    </p>
+                                    <button onclick="openEtherealRemoverModal()" class="mt-8 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-7 py-4 text-[11px] uppercase tracking-[0.3em] text-cyan-300 transition-all hover:bg-cyan-500/20">
+                                        Launch Remover
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── MARQUEE ── -->
+            <div class="relative overflow-hidden py-8 sm:py-16 border-y border-white/5 bg-white/[0.01]">
+                <div class="marquee-animation">
+                    <div class="flex items-center gap-12 sm:gap-20 shrink-0">
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                    </div>
+                    <div class="flex items-center gap-12 sm:gap-20 shrink-0">
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
                     </div>
                 </div>
             </div>
+
         </section>
 
-        <section id="labs" class="relative py-24 md:py-40 border-t border-white/5">
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[600px] bg-brand-cyan/10 blur-[150px] pointer-events-none rounded-full"></div>
+        <!-- ══════════════════════════════════════════
+             LABS SECTION
+        ══════════════════════════════════════════ -->
+        <section id="labs" class="relative mx-auto max-w-[1500px] px-4 sm:px-8 md:px-12 py-16 sm:py-28 md:py-36 overflow-hidden bg-[#030303] text-white">
+            <div class="pointer-events-none absolute left-1/2 top-0 h-[300px] w-[300px] sm:h-[600px] sm:w-[600px] -translate-x-1/2 rounded-full bg-gradient-to-b from-purple-600/20 to-blue-600/0 blur-[80px] sm:blur-[140px]"></div>
+            <div class="pointer-events-none absolute -left-20 top-1/3 h-[200px] w-[200px] sm:h-[300px] sm:w-[300px] rounded-full bg-purple-500/10 blur-[60px] sm:blur-[100px]"></div>
 
-            <div class="max-w-7xl mx-auto px-6 relative z-10">
-                <div class="text-center mb-16">
-                    <span class="glass inline-block px-4 py-2 rounded-full text-[10px] uppercase tracking-[0.4em] text-brand-cyan font-bold border-brand-cyan/20">Creative Labs</span>
-                </div>
+            <div class="mb-10 sm:mb-16 text-center relative z-10">
+                <p class="inline-block text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.6em] text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 backdrop-blur-md pl-[0.6em]">
+                    Creative Studio
+                </p>
+            </div>
 
-                <div class="glass rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 relative overflow-hidden group hover:border-brand-purple/40 transition-colors duration-700 gs-reveal">
-                    <!-- Subtle background interaction -->
-                    <div class="absolute inset-0 bg-gradient-to-br from-brand-purple/5 to-brand-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                    
-                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
-                        <div class="max-w-2xl">
-                            <h3 class="font-display text-3xl md:text-6xl font-black uppercase tracking-tight leading-[0.9] mb-6">
-                                We create systems <br/>
-                                <span class="bg-gradient-to-r from-brand-purple to-brand-cyan bg-clip-text text-transparent">that feel alive</span>
+            <!-- Bento Box Hero Card -->
+            <div class="grid grid-cols-1 md:grid-cols-12 relative z-10 mb-10 sm:mb-16">
+                <div class="group bento-card relative md:col-span-10 md:col-start-2 overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-white/[0.002] p-5 sm:p-8 md:p-16 backdrop-blur-2xl transition-all duration-700 hover:border-purple-500/40 hover:shadow-[0_0_50px_rgba(168,85,247,0.12)]">
+                    <div class="absolute inset-0 z-0 overflow-hidden rounded-[1.25rem] sm:rounded-[2rem]">
+                        <video id="mux-player" autoplay loop muted playsinline class="h-full w-full object-cover opacity-15 scale-105 blur-[1px] transition-all duration-1000 ease-out group-hover:opacity-35 group-hover:scale-100 group-hover:blur-0"></video>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/70 to-transparent"></div>
+                    </div>
+                    <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 ease-out pointer-events-none z-10">
+                        <div class="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-purple-500/10 blur-[100px]"></div>
+                        <div class="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/5 blur-[100px]"></div>
+                    </div>
+                    <div class="relative z-20 flex flex-col md:flex-row md:items-end md:justify-between gap-6 sm:gap-10">
+                        <div class="space-y-2 sm:space-y-4 max-w-2xl">
+                            <h3 class="bento-headline font-display font-black uppercase leading-[0.95] tracking-tight" style="font-size: clamp(1.4rem, 5vw, 3.75rem);">
+                                <span class="block text-white/90 transition-transform duration-700 group-hover:translate-x-2">We create experiences</span>
+                                <span class="block bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent transition-transform duration-700 delay-75 group-hover:translate-x-4">that feel alive</span>
                             </h3>
-                            <p class="text-sm md:text-base text-white/60 leading-relaxed max-w-md">
-                                Pushing the boundaries of digital interfaces through immersive interactive systems, WebGL rendering, and AI-driven workflows.
+                            <p class="text-xs sm:text-sm text-zinc-400 max-w-md font-light leading-relaxed pt-1 sm:pt-2 opacity-0 -translate-y-2 transition-all duration-700 delay-100 group-hover:opacity-100 group-hover:translate-y-0">
+                                Pushing the boundaries of digital interfaces through immersive interactive systems.
                             </p>
                         </div>
+                        <a href="#" class="group/cta inline-flex items-center gap-4 sm:gap-5 self-start md:self-end shrink-0">
+                            <div class="relative overflow-hidden h-6">
+                                <span class="block text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-white/60 transition-transform duration-500 ease-out group-hover/cta:-translate-y-full">Explore Lab</span>
+                                <span class="absolute left-0 top-0 block translate-y-full text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-purple-400 transition-transform duration-500 ease-out group-hover/cta:translate-y-0">Enter Galaxy</span>
+                            </div>
+                            <div class="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all duration-500 group-hover/cta:scale-110 group-hover/cta:rotate-45 group-hover/cta:border-purple-500/40 group-hover/cta:bg-purple-500/20 shadow-lg">
+                                <div class="absolute inset-0 rounded-full bg-purple-500/30 blur-md opacity-0 group-hover/cta:opacity-100 transition-opacity duration-500"></div>
+                                <i data-lucide="arrow-up-right" class="relative h-4 w-4 text-white group-hover/cta:text-purple-300 transition-colors"></i>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="absolute inset-0 opacity-[0.015] mix-blend-overlay pointer-events-none z-20" style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');"></div>
+                </div>
+            </div>
 
-                        <button onclick="ui.triggerToast('Entering Galaxy Workspace...')" class="w-20 h-20 md:w-28 md:h-28 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 hover:bg-brand-purple hover:text-white transition-all shadow-xl shrink-0 group/btn">
-                            <i data-lucide="arrow-up-right" class="w-8 h-8 group-hover/btn:rotate-45 transition-transform"></i>
-                        </button>
+            <!-- ── MARQUEE ── -->
+            <div class="relative overflow-hidden py-8 sm:py-16 border-y border-white/5 bg-white/[0.01]">
+                <div class="marquee-animation">
+                    <div class="flex items-center gap-12 sm:gap-20 shrink-0">
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                    </div>
+                    <div class="flex items-center gap-12 sm:gap-20 shrink-0">
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter opacity-10 uppercase whitespace-nowrap">Digital Architects</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
+                        <span class="font-display text-xl sm:text-3xl font-bold tracking-tighter text-white/40 uppercase whitespace-nowrap">Crafting Unreality</span>
+                        <i data-lucide="plus" class="text-purple-500 w-3 h-3 sm:w-5 sm:h-5 shrink-0"></i>
                     </div>
                 </div>
             </div>
+
         </section>
+
     </main>
 
-    <footer class="relative bg-black pt-32 pb-12 border-t border-white/10 z-10">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-12 mb-24">
-                <div>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-white/40 mb-6">Next Step</p>
-                    <h2 class="font-display font-black leading-[0.85] tracking-tighter" style="font-size: clamp(4rem, 10vw, 8rem);">
-                        LET'S <span class="text-stroke-footer italic">START</span><br/>
-                        TALKING<span class="text-brand-purple">.</span>
+    <!-- ══════════════════════════════════════════
+         FOOTER & CONTACT
+    ══════════════════════════════════════════ -->
+    <footer id="contact" class="relative bg-[#050505] pt-16 sm:pt-40 pb-16 px-4 sm:px-8 overflow-hidden">
+        <div class="mx-auto max-w-7xl">
+            <div class="flex flex-col items-center justify-between gap-8 sm:gap-12 md:flex-row md:items-end">
+                <div class="text-center md:text-left">
+                    <p class="mb-3 sm:mb-4 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.8em] text-white/30">Next Step</p>
+                    <h2 class="font-display font-black leading-none tracking-tighter" style="font-size: clamp(2rem, 9vw, 5.5rem);">
+                        LET'S <span class="italic text-transparent text-stroke-footer">START</span><br />
+                        TALKING<span class="text-purple-500">.</span>
                     </h2>
                 </div>
-                <button onclick="ui.openModal('contact-modal')" class="w-24 h-24 rounded-full glass border-white/20 flex items-center justify-center hover:border-brand-purple hover:bg-brand-purple/10 transition-colors group">
-                    <i data-lucide="mail" class="w-8 h-8 text-white/60 group-hover:text-brand-purple transition-colors"></i>
+                <button onclick="openContact()" aria-label="Contact us"
+                    class="flex h-20 w-20 sm:h-32 sm:w-32 items-center justify-center rounded-full border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-purple-500/50 transition-all cursor-pointer active:scale-95 touch-manipulation shrink-0">
+                    <i data-lucide="mail" class="w-6 h-6 sm:w-8 sm:h-8 text-white/40 group-hover:text-purple-400 transition-colors"></i>
                 </button>
             </div>
-
-            <div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/10 gap-6">
-                <p class="text-[10px] uppercase tracking-widest text-white/40 font-medium">© 2026 UNREAL STUDIO. BUILT FOR THE BOLD.</p>
-                <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-white/50">
-                    <a href="#" class="hover:text-white transition-colors">Instagram</a>
-                    <a href="#" class="hover:text-white transition-colors">Twitter</a>
-                    <a href="#" class="hover:text-white transition-colors">Github</a>
+            <div class="mt-12 sm:mt-24 flex flex-col items-center justify-between gap-4 sm:gap-6 border-t border-white/5 pt-6 md:flex-row">
+                <p class="text-[9px] uppercase tracking-[0.4em] text-white/30 text-center md:text-left">© 2026 UNREAL STUDIO. BUILT FOR THE BOLD.</p>
+                <div class="flex gap-5 sm:gap-8 text-[10px] font-bold tracking-widest text-white/30 uppercase">
+                    <a href="#" class="hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Instagram</a>
+                    <a href="#" class="hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Twitter</a>
+                    <a href="#" class="hover:text-white transition-colors py-2 min-h-[44px] flex items-center">Github</a>
                 </div>
             </div>
         </div>
     </footer>
 
-    
-    <!-- Showreel Modal -->
-    <div id="showreel-modal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md transition-all duration-500 modal-hidden">
-        <button onclick="ui.closeModal('showreel-modal')" class="absolute top-6 right-6 md:top-10 md:right-10 z-50 text-white/50 hover:text-white bg-black/50 p-3 rounded-full backdrop-blur-md">
-            <i data-lucide="x" class="w-6 h-6"></i>
+    <!-- ══════════════════════════════════════════
+         MODALS
+    ══════════════════════════════════════════ -->
+
+    <!-- Showreel Overlay -->
+    <div id="showreel-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-black opacity-0 pointer-events-none transition-opacity duration-500">
+        <button onclick="closeShowreel()" aria-label="Close showreel" class="absolute right-4 top-4 sm:right-8 sm:top-8 z-50 text-white/50 hover:text-white p-3 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation">
+            <i data-lucide="x" class="w-6 h-6 sm:w-8 sm:h-8"></i>
         </button>
-        <div class="w-full max-w-6xl aspect-video p-4">
-            <div class="w-full h-full rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 relative">
-                <video id="reel-vid" class="w-full h-full object-cover" controls loop playsinline>
+        <div class="w-full h-full p-2 sm:p-4 md:p-12">
+            <div class="w-full h-full bg-neutral-900 rounded-[1rem] sm:rounded-[2rem] overflow-hidden relative">
+                <video id="reel-video" class="w-full h-full object-cover" loop playsinline>
                     <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4" type="video/mp4">
                 </video>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <p class="font-display text-sm sm:text-2xl font-black tracking-widest opacity-20 uppercase text-center px-4">Our Studio Showreel 2026</p>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Contact Modal -->
-    <div id="contact-modal" class="fixed inset-0 z-[200] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-500 modal-hidden p-4">
-        <div class="absolute inset-0" onclick="ui.closeModal('contact-modal')"></div>
-        <div class="relative w-full max-w-lg bg-brand-dark border border-white/10 rounded-[2rem] p-8 md:p-12 shadow-2xl">
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="font-display text-3xl font-black uppercase tracking-tight">Get in Touch</h2>
-                <button onclick="ui.closeModal('contact-modal')" class="text-white/40 hover:text-white glass p-2 rounded-full">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+    <div id="contact-modal" class="fixed inset-0 z-[220] flex items-end sm:items-center justify-center bg-black/80 modal-blur opacity-0 pointer-events-none transition-opacity duration-500 px-0 sm:px-4">
+        <div class="w-full sm:max-w-xl bg-[#030303] border border-white/10 rounded-t-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-12 max-h-[90dvh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6 sm:mb-10">
+                <h2 class="font-display text-xl sm:text-3xl font-black tracking-tighter uppercase">Get in touch</h2>
+                <button onclick="closeContact()" aria-label="Close" class="text-white/30 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation">
+                    <i data-lucide="x" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                 </button>
             </div>
-            <form onsubmit="ui.submitContact(event)" class="space-y-6">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Name</label>
-                    <input type="text" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm focus:outline-none focus:border-brand-purple transition-colors">
+            <form class="space-y-4 sm:space-y-6" onsubmit="handleContactSubmit(event)">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Your Name</label>
+                    <input type="text" required autocomplete="name"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-purple-500 transition-colors" />
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Email</label>
-                    <input type="email" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm focus:outline-none focus:border-brand-purple transition-colors">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Email Address</label>
+                    <input type="email" required autocomplete="email"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-purple-500 transition-colors" />
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Message</label>
-                    <textarea required rows="3" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm focus:outline-none focus:border-brand-purple transition-colors resize-none"></textarea>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Message</label>
+                    <textarea rows="4" required
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none"></textarea>
                 </div>
-                <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl uppercase tracking-widest text-xs hover:bg-brand-purple hover:text-white transition-colors">
-                    Send Proposal
-                </button>
+                <button type="submit" class="w-full bg-purple-600 text-white py-4 rounded-full font-bold text-[11px] uppercase tracking-widest hover:bg-purple-700 transition-all active:scale-95 touch-manipulation min-h-[52px]">Send Proposal</button>
             </form>
         </div>
     </div>
 
-    <!-- Global Toast Notification -->
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] bg-white text-black px-6 py-4 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 shadow-2xl">
-        Message
-    </div>
-
-    
-    <!-- Vortex Downloader Modal -->
-    <div id="vortex-modal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md transition-all duration-500 modal-hidden p-4">
-        <div class="absolute inset-0" onclick="ui.closeModal('vortex-modal')"></div>
-        <div class="relative w-full max-w-md bg-[#080808] border border-white/10 rounded-3xl p-8 shadow-[0_0_100px_rgba(168,85,247,0.15)] overflow-hidden">
-            <div class="absolute -top-20 -left-20 w-40 h-40 bg-brand-purple/20 blur-[50px] rounded-full pointer-events-none"></div>
-            
-            <div class="flex justify-between items-start mb-8 relative z-10">
+    <!-- Vortex Modal -->
+    <div id="vortex-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all duration-300">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeVortexModal()"></div>
+        <div class="relative w-full sm:max-w-lg bg-[#050505] border border-white/10 rounded-t-[1.5rem] sm:rounded-3xl p-5 sm:p-8 overflow-hidden shadow-2xl shadow-purple-500/5 transform scale-95 opacity-0 transition-all duration-300" id="modal-content">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <!-- Drag handle for mobile -->
+            <div class="sm:hidden w-10 h-1 bg-white/20 rounded-full mx-auto mb-4"></div>
+            <div class="flex items-center justify-between mb-5 sm:mb-6 relative z-10">
                 <div>
-                    <p class="text-[9px] font-bold tracking-[0.2em] text-brand-purple uppercase mb-1">Toolbox</p>
-                    <h2 class="font-display text-2xl font-black uppercase">Vortex Extractor</h2>
+                    <h4 class="text-xs font-bold tracking-[0.3em] text-purple-400 uppercase">Vortex Downloader</h4>
+                    <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">EXTRACT MEDIA</h2>
                 </div>
-                <button onclick="ui.closeModal('vortex-modal')" class="text-white/40 hover:text-white bg-white/5 p-2 rounded-full">
+                <button onclick="closeVortexModal()" class="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all touch-manipulation">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-
-            <div class="space-y-4 relative z-10" id="vortex-input-stage">
-                <div class="relative flex items-center bg-white/5 border border-white/10 rounded-xl focus-within:border-brand-purple transition-colors p-1">
-                    <div class="pl-3 text-white/40"><i data-lucide="link" class="w-4 h-4"></i></div>
-                    <input type="text" id="vortex-url" placeholder="Paste media URL here..." class="w-full bg-transparent py-3 px-3 outline-none text-sm placeholder:text-white/30">
+            <div class="space-y-4 relative z-10">
+                <div class="relative flex items-center bg-white/5 border border-white/10 rounded-2xl focus-within:border-purple-500/50 transition-all">
+                    <div class="pl-4 text-gray-500"><i data-lucide="link" class="w-4 h-4"></i></div>
+                    <input type="text" id="vortex-url" placeholder="Tempel URL TikTok di sini..."
+                        class="w-full bg-transparent py-4 pl-3 pr-4 outline-none text-sm text-white placeholder:text-zinc-600">
                 </div>
-                <button onclick="tools.processVortex()" class="w-full bg-brand-purple text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-widest hover:bg-purple-600 transition-colors flex items-center justify-center gap-2">
-                    <i data-lucide="zap" class="w-4 h-4"></i> Start Extraction
+                <button onclick="processVortexDownload()" id="vortex-btn" class="w-full bg-white text-black hover:bg-purple-500 hover:text-white font-bold py-4 rounded-2xl tracking-[0.2em] text-[10px] uppercase transition-all flex items-center justify-center gap-2 touch-manipulation min-h-[52px]">
+                    <span>Start Extraction</span>
+                    <i data-lucide="zap" class="w-4 h-4"></i>
                 </button>
             </div>
-
-            <!-- Vortex Loading State -->
-            <div id="vortex-loading" class="hidden flex-col items-center justify-center py-10 relative z-10">
-                <div class="w-8 h-8 border-2 border-brand-purple/20 border-t-brand-purple rounded-full animate-spin"></div>
-                <p class="mt-4 text-[9px] font-bold uppercase tracking-widest text-brand-purple animate-pulse">Bypassing Firewalls...</p>
+            <div id="vortex-loader" class="hidden flex-col items-center py-8 relative z-10">
+                <div class="w-10 h-10 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+                <p class="mt-4 text-[9px] tracking-[0.3em] text-zinc-500 font-bold uppercase animate-pulse">Processing Core</p>
             </div>
-
-            <!-- Vortex Result State -->
-            <div id="vortex-result" class="hidden mt-6 pt-6 border-t border-white/10 relative z-10">
-                <div class="flex gap-4 items-center">
-                    <div class="w-16 h-24 bg-zinc-800 rounded-lg overflow-hidden shrink-0 border border-white/10">
-                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop" class="w-full h-full object-cover">
+            <div id="vortex-result" class="hidden mt-6 pt-6 border-t border-white/5 relative z-10">
+                <div class="flex gap-4">
+                    <div class="w-20 aspect-[9/16] bg-zinc-900 border border-white/10 rounded-xl overflow-hidden flex-shrink-0">
+                        <img id="vortex-thumb" src="" class="w-full h-full object-cover" alt="Thumb">
                     </div>
-                    <div class="flex-1">
-                        <p class="text-[10px] font-bold text-white mb-1">Video Extracted Successfully</p>
-                        <p class="text-xs text-white/40 line-clamp-2 leading-relaxed">High quality media ready for download without watermarks.</p>
+                    <div class="flex-1 flex flex-col justify-between py-1">
+                        <div>
+                            <p id="vortex-author" class="text-xs font-bold text-purple-300">@username</p>
+                            <p id="vortex-title" class="text-zinc-400 text-[11px] line-clamp-2 mt-1 italic font-light">Deskripsi...</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <button id="vortex-dl-video" class="bg-white/10 hover:bg-purple-500 hover:text-white text-white text-[9px] font-bold uppercase tracking-wider py-2.5 px-3 rounded-lg border border-white/5 transition-all touch-manipulation min-h-[44px]">Video (No WM)</button>
+                            <button id="vortex-dl-audio" class="bg-white/5 hover:bg-white/10 text-zinc-300 text-[9px] font-bold uppercase tracking-wider py-2.5 px-3 rounded-lg border border-white/5 transition-all touch-manipulation min-h-[44px]">Audio MP3</button>
+                        </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3 mt-6">
-                    <button class="bg-white text-black font-bold py-3 rounded-lg text-[9px] uppercase tracking-widest hover:bg-gray-200 transition-colors" onclick="ui.triggerToast('Downloading Video...')">MP4 Video</button>
-                    <button class="bg-white/10 text-white font-bold py-3 rounded-lg text-[9px] uppercase tracking-widest hover:bg-white/20 transition-colors" onclick="ui.triggerToast('Downloading Audio...')">MP3 Audio</button>
-                </div>
-                <button onclick="tools.resetVortex()" class="w-full mt-3 text-[9px] uppercase tracking-widest text-white/40 hover:text-white py-2">Extract Another</button>
+                <div id="vortex-images-preview-container" class="hidden mt-4 pt-4 border-t border-white/5"></div>
             </div>
+            <div id="vortex-status" class="hidden mt-4 p-3 rounded-xl text-center text-[10px] font-bold tracking-widest uppercase"></div>
         </div>
     </div>
 
-    <!-- Ethereal Modal -->
-    <div id="ethereal-modal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-xl transition-all duration-500 modal-hidden p-4 md:p-10">
-        <div class="absolute inset-0" onclick="ui.closeModal('ethereal-modal')"></div>
-        <div class="relative w-full max-w-5xl h-[85vh] bg-[#050505] border border-white/10 rounded-3xl flex flex-col overflow-hidden shadow-2xl">
-            
-            <!-- Header -->
-            <div class="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-brand-cyan/10 flex items-center justify-center border border-brand-cyan/30">
-                        <i data-lucide="aperture" class="w-5 h-5 text-brand-cyan"></i>
+    <!-- Ethereal Remover Modal -->
+    <div id="ethereal-remover-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-3 transition-all duration-300 overflow-y-auto">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md animate-[fadeIn_0.3s_ease]" onclick="closeEtherealRemoverModal()"></div>
+        <div class="relative w-full sm:max-w-4xl bg-[#050505] border border-white/10 rounded-t-[1.5rem] sm:rounded-2xl p-4 md:p-5 overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 z-10 max-h-[95dvh] overflow-y-auto" id="remover-modal-content">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <!-- Drag handle -->
+            <div class="sm:hidden w-10 h-1 bg-white/20 rounded-full mx-auto mb-3"></div>
+            <div class="flex items-center justify-between mb-4 relative z-10">
+                <div>
+                    <h4 class="text-[9px] font-bold tracking-[0.3em] text-purple-400 uppercase">Ethereal Studio</h4>
+                    <h2 class="text-base sm:text-lg font-black tracking-tight text-white uppercase mt-0.5">COMPACT BACKGROUND SUITE</h2>
+                </div>
+                <button onclick="closeEtherealRemoverModal()" class="w-9 h-9 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all touch-manipulation">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="remover-dropzone" class="relative group border border-dashed border-white/10 hover:border-purple-500/40 bg-white/[0.01] rounded-xl p-5 sm:p-6 text-center cursor-pointer transition-all duration-300 z-10">
+                <input type="file" id="remover-file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-purple-400 border border-white/5 transition-all">
+                        <i data-lucide="image-plus" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h2 class="font-display font-bold uppercase tracking-wide text-lg leading-none">Ethereal Studio</h2>
-                        <p class="text-[9px] text-brand-cyan uppercase tracking-widest font-bold mt-1">Neural Background Suite</p>
-                    </div>
-                </div>
-                <button onclick="ui.closeModal('ethereal-modal')" class="text-white/40 hover:text-white glass p-2 rounded-full">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Workspace -->
-            <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-                <!-- Toolbar -->
-                <div class="w-full md:w-64 bg-black/50 border-r border-white/5 p-4 overflow-y-auto">
-                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mb-4">AI Tools</p>
-                    
-                    <div class="space-y-2">
-                        <button onclick="tools.processEthereal()" class="w-full flex items-center justify-between bg-brand-cyan text-black hover:bg-cyan-400 font-bold py-3 px-4 rounded-xl transition-colors group">
-                            <span class="text-[10px] uppercase tracking-widest">Auto Segment</span>
-                            <i data-lucide="sparkles" class="w-4 h-4"></i>
-                        </button>
-                        
-                        <button class="w-full flex items-center justify-between glass hover:bg-white/10 text-white font-bold py-3 px-4 rounded-xl transition-colors text-[10px] uppercase tracking-widest" onclick="ui.triggerToast('Manual brush selected')">
-                            Erase Brush <i data-lucide="brush" class="w-4 h-4 text-white/40"></i>
-                        </button>
-                    </div>
-
-                    <div class="mt-8">
-                        <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mb-4">Backdrop</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button class="aspect-square rounded-xl border border-white/10 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAACVJREFUKFNjZCASMDKgAnv37v3PTEPEf3R5RlINwGkYVUAqBgAAsYgRAnw0ySAAAAAASUVORK5CYII=')] hover:border-brand-cyan transition-colors" onclick="ui.triggerToast('Transparent background applied')"></button>
-                            <button class="aspect-square rounded-xl border border-white/10 bg-black hover:border-brand-cyan transition-colors" onclick="ui.triggerToast('Dark background applied')"></button>
-                            <button class="aspect-square rounded-xl border border-brand-cyan shadow-[0_0_15px_rgba(6,182,212,0.3)] bg-gradient-to-br from-brand-purple/20 to-brand-cyan/20 transition-colors"></button>
-                            <button class="aspect-square rounded-xl border border-white/10 bg-white hover:border-brand-cyan transition-colors" onclick="ui.triggerToast('Light background applied')"></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Canvas Area -->
-                <div class="flex-1 bg-[#0a0a0a] relative flex items-center justify-center p-8 overflow-hidden">
-                    <div class="absolute inset-0 grid-bg opacity-30"></div>
-                    
-                    <!-- Empty State -->
-                    <div id="ethereal-empty" class="text-center z-10">
-                        <div class="w-20 h-20 mx-auto rounded-full glass flex items-center justify-center mb-6 text-white/30 border-dashed hover:border-brand-cyan hover:text-brand-cyan cursor-pointer transition-colors" onclick="tools.loadMockImage()">
-                            <i data-lucide="image-plus" class="w-8 h-8"></i>
-                        </div>
-                        <p class="text-xs uppercase tracking-widest font-bold text-white mb-2">Upload Subject</p>
-                        <p class="text-[10px] text-white/40 font-mono">JPG, PNG, WEBP (Max 10MB)</p>
-                    </div>
-
-                    <!-- Loading State -->
-                    <div id="ethereal-loading" class="hidden flex-col items-center z-10 bg-black/80 absolute inset-0 justify-center backdrop-blur-sm">
-                        <div class="w-12 h-12 border-2 border-brand-cyan/20 border-t-brand-cyan rounded-full animate-spin"></div>
-                        <p class="mt-6 text-[10px] font-bold uppercase tracking-[0.3em] text-brand-cyan animate-pulse">Processing Neural Network...</p>
-                    </div>
-
-                    <!-- Result State -->
-                    <div id="ethereal-result" class="hidden relative z-10 w-full max-w-md aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAACVJREFUKFNjZCASMDKgAnv37v3PTEPEf3R5RlINwGkYVUAqBgAAsYgRAnw0ySAAAAAASUVORK5CYII=')]">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover" style="mask-image: radial-gradient(white, black); -webkit-mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);">
+                        <p class="text-[10px] font-bold text-white uppercase tracking-wider">Pilih Gambar atau Drop di Sini</p>
+                        <p class="text-[8px] text-zinc-600 font-mono mt-0.5">PNG, JPG, WEBP (PROSES 100% LOKAL / ANTI-BLOKIR)</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Footer -->
-            <div class="p-4 border-t border-white/5 bg-black flex justify-between items-center">
-                <p class="text-[9px] font-mono text-white/30">Lokal Processing Unit Active</p>
-                <button onclick="ui.triggerToast('Exporting high-res PNG...')" class="bg-white text-black hover:bg-brand-cyan hover:text-white transition-colors font-bold px-6 py-2.5 rounded-lg text-[10px] uppercase tracking-widest flex items-center gap-2">
-                    Export PNG <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                </button>
+            <div id="remover-loader" class="hidden flex-col items-center py-8 relative z-10 text-center">
+                <div class="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+                <p id="remover-loader-text" class="mt-3 text-[9px] tracking-[0.2em] text-purple-400 font-bold uppercase animate-pulse">Menghubungkan Model AI Lokal</p>
+            </div>
+            <div id="remover-studio" class="hidden relative z-10 flex flex-col md:grid md:grid-cols-12 gap-4">
+                <div class="md:col-span-4 bg-[#080808] border border-white/5 rounded-xl p-3 flex flex-col justify-between gap-4 md:max-h-[60vh] overflow-y-auto">
+                    <div class="space-y-3.5">
+                        <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                            <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">RIWAYAT EDIT</p>
+                            <div class="flex items-center gap-1.5">
+                                <button id="btn-undo" onclick="undoAction()" disabled class="w-7 h-7 rounded bg-white/5 border border-white/10 hover:border-purple-500 hover:text-purple-400 flex items-center justify-center text-zinc-400 transition-all disabled:opacity-30 disabled:pointer-events-none touch-manipulation">
+                                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button id="btn-redo" onclick="redoAction()" disabled class="w-7 h-7 rounded bg-white/5 border border-white/10 hover:border-purple-500 hover:text-purple-400 flex items-center justify-center text-zinc-400 transition-all disabled:opacity-30 disabled:pointer-events-none touch-manipulation">
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="resetToOriginal()" class="w-7 h-7 rounded bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white flex items-center justify-center text-red-400 transition-all touch-manipulation">
+                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p class="text-[9px] font-bold text-purple-400 uppercase tracking-wider">Mode Kuas & Masking:</p>
+                            <button id="tool-auto-ai" onclick="runAutoAIMatting()" class="w-full flex items-center justify-between bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-2.5 py-2.5 text-[10px] font-bold uppercase transition-all shadow-lg shadow-purple-600/15 touch-manipulation min-h-[44px]">
+                                <span class="flex items-center gap-1.5"><i data-lucide="sparkles" class="w-3.5 h-3.5 animate-pulse"></i> 1. Auto AI Edge-Matting</span>
+                                <span class="text-[7px] bg-black text-purple-300 px-1 rounded uppercase font-black">AI Local</span>
+                            </button>
+                            <button id="tool-chroma" onclick="switchTool('chroma')" class="w-full flex items-center justify-between bg-white/5 border border-white/10 text-zinc-400 hover:text-white rounded-lg px-2.5 py-2 text-[10px] font-bold uppercase transition-all touch-manipulation min-h-[44px]">
+                                <span class="flex items-center gap-1.5"><i data-lucide="pipette" class="w-3.5 h-3.5"></i> 2. Pemilih Warna Latar</span>
+                                <span class="text-[7px] bg-zinc-800 text-zinc-400 px-1 rounded uppercase font-black">Chroma</span>
+                            </button>
+                            <button id="tool-erase" onclick="switchTool('erase')" class="w-full flex items-center justify-between bg-white/5 border border-white/10 text-zinc-400 hover:text-white rounded-lg px-2.5 py-2 text-[10px] font-bold uppercase transition-all touch-manipulation min-h-[44px]">
+                                <span class="flex items-center gap-1.5"><i data-lucide="brush" class="w-3.5 h-3.5"></i> 3. Kuas Penghapus</span>
+                                <span class="text-[7px] bg-zinc-800 text-zinc-400 px-1 rounded uppercase font-black">Eraser</span>
+                            </button>
+                            <button id="tool-restore" onclick="switchTool('restore')" class="w-full flex items-center justify-between bg-white/5 border border-white/10 text-zinc-400 hover:text-white rounded-lg px-2.5 py-2 text-[10px] font-bold uppercase transition-all touch-manipulation min-h-[44px]">
+                                <span class="flex items-center gap-1.5"><i data-lucide="undo-2" class="w-3.5 h-3.5"></i> 4. Kuas Pemulih</span>
+                                <span class="text-[7px] bg-emerald-600/20 text-emerald-400 px-1 rounded uppercase font-black">Restore</span>
+                            </button>
+                        </div>
+                        <div id="chroma-instructions" class="bg-purple-950/20 border border-purple-500/10 rounded-lg p-2.5 text-[9px] leading-relaxed text-purple-300">
+                            <strong class="block mb-0.5">💡 Pemilih Warna:</strong>
+                            Klik warna pada latar kanvas untuk langsung menghapus warna serupa di seluruh gambar.
+                            <div class="mt-2.5">
+                                <label class="block mb-0.5 font-bold text-[8px] uppercase tracking-wider">Toleransi Warna:</label>
+                                <input type="range" id="chroma-tolerance" min="5" max="100" value="30" oninput="updateToleranceLabel(this.value)" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                                <span id="tolerance-val" class="block text-right mt-0.5 font-mono text-[8px] text-zinc-500">30%</span>
+                            </div>
+                        </div>
+                        <div id="erase-controls" class="hidden bg-zinc-950 border border-white/5 rounded-lg p-2.5 text-[9px] leading-relaxed space-y-2.5">
+                            <div class="flex items-center justify-between text-white">
+                                <strong>🖌️ Pengaturan Kuas:</strong>
+                                <span id="brush-size-val" class="font-bold text-purple-400 font-mono text-xs bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">25px</span>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between text-[8px] text-zinc-400 uppercase font-mono">
+                                    <span>Ukuran Kuas</span>
+                                    <span class="text-[8px] text-zinc-600">Min 3px - Max 60px</span>
+                                </div>
+                                <input type="range" id="brush-size" min="3" max="60" value="25" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                            </div>
+                        </div>
+                        <div class="bg-zinc-950/60 border border-white/5 rounded-lg p-2.5 space-y-2.5 text-[9px]">
+                            <span class="block text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Aura & Studio FX</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-zinc-300 font-medium">Efek Cahaya Neon Aura:</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="neon-glow-toggle" onchange="toggleNeonGlow()" class="sr-only peer">
+                                    <div class="w-7 h-4 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-600"></div>
+                                </label>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between text-[8px] text-zinc-400 font-mono">
+                                    <span>Kehalusan Tepian</span>
+                                    <span id="edge-blur-val" class="font-bold text-white">0px</span>
+                                </div>
+                                <input type="range" id="edge-blur-slider" min="0" max="10" value="0" oninput="updateEdgeBlur(this.value)" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                            </div>
+                            <div class="space-y-1.5 pt-1.5 border-t border-white/5">
+                                <span class="text-[8px] font-bold text-purple-300 uppercase block">Ganti Background Studio:</span>
+                                <div class="grid grid-cols-4 gap-1">
+                                    <button onclick="setStudioPattern('transparent')" class="p-2 text-[7px] font-bold uppercase bg-white/5 border border-white/10 rounded hover:border-purple-500 transition-colors touch-manipulation min-h-[36px]">Grid</button>
+                                    <button onclick="setStudioPattern('black')"       class="p-2 text-[7px] font-bold uppercase bg-white/5 border border-white/10 rounded hover:border-purple-500 transition-colors touch-manipulation min-h-[36px]">Gelap</button>
+                                    <button onclick="setStudioPattern('neon')"        class="p-2 text-[7px] font-bold uppercase bg-white/5 border border-white/10 rounded hover:border-purple-500 transition-colors touch-manipulation min-h-[36px]">Aura</button>
+                                    <button onclick="setStudioPattern('cyber')"       class="p-2 text-[7px] font-bold uppercase bg-white/5 border border-white/10 rounded hover:border-purple-500 transition-colors touch-manipulation min-h-[36px]">Siber</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 pt-2 border-t border-white/5">
+                        <button id="remover-download-btn" class="w-full bg-white text-black hover:bg-purple-500 hover:text-white font-bold py-2.5 px-3 rounded-lg tracking-[0.2em] text-[9px] uppercase transition-all flex items-center justify-center gap-1.5 touch-manipulation min-h-[44px]">
+                            <span>Simpan Hasil PNG</span>
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="closeEtherealRemoverModal()" class="w-full bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-400 hover:text-white font-bold py-2 px-3 rounded-lg tracking-wider text-[8px] uppercase transition-all touch-manipulation min-h-[40px]">
+                            Kembali ke Studio
+                        </button>
+                    </div>
+                </div>
+                <div class="md:col-span-8 flex flex-col gap-1.5 relative">
+                    <div class="flex items-center justify-between text-[8px] font-bold text-zinc-500 uppercase tracking-widest">
+                        <span class="flex items-center gap-1.5"><i data-lucide="eye" class="w-3 h-3 text-purple-400"></i> Interactive Editor Canvas</span>
+                        <span id="canvas-dim-label" class="font-mono text-[7px] text-zinc-600">0x0 px</span>
+                    </div>
+                    <div id="canvas-workspace-container" class="rounded-xl border border-white/10 overflow-hidden relative flex items-center justify-center transparent-pattern aspect-[4/3] max-h-[40vh] md:max-h-[48vh] transition-all duration-300 shadow-inner">
+                        <div id="brush-cursor-indicator"></div>
+                        <canvas id="interactive-canvas" class="max-w-full max-h-full object-contain touch-none"></canvas>
+                    </div>
+                    <div class="flex items-center justify-between text-[8px] text-zinc-500 font-mono px-0.5">
+                        <div class="flex items-center gap-2">
+                            <span>Skala Zoom:</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="setCanvasZoom(1)"   class="px-1.5 py-1 bg-white/5 border border-white/10 rounded text-[7px] hover:text-white hover:border-purple-500 touch-manipulation min-h-[32px]">1x</button>
+                                <button onclick="setCanvasZoom(1.5)" class="px-1.5 py-1 bg-white/5 border border-white/10 rounded text-[7px] hover:text-white hover:border-purple-500 touch-manipulation min-h-[32px]">1.5x</button>
+                                <button onclick="setCanvasZoom(2)"   class="px-1.5 py-1 bg-white/5 border border-white/10 rounded text-[7px] hover:text-white hover:border-purple-500 touch-manipulation min-h-[32px]">2x</button>
+                                <button onclick="setCanvasZoom(3)"   class="px-1.5 py-1 bg-white/5 border border-white/10 rounded text-[7px] hover:text-white hover:border-purple-500 touch-manipulation min-h-[32px]">3x</button>
+                            </div>
+                        </div>
+                        <span>PNG transparent layer</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- ── ALERT TOAST ── -->
+    <div id="alert-box" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] bg-white text-black px-5 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-[10px] uppercase tracking-widest opacity-0 pointer-events-none transition-all duration-300 text-center max-w-[calc(100vw-2rem)]">
+        Message sent
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SCRIPTS (order matters)
+    ══════════════════════════════════════════ -->
     <script>
-        // Initialize Icons
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    </script>
 
-        // --- UI & Modal Manager ---
-        const ui = {
-            toastTimeout: null,
-            
-            triggerToast(message) {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
-                
-                clearTimeout(this.toastTimeout);
-                this.toastTimeout = setTimeout(() => {
-                    toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
-                }, 3000);
-            },
+    <script src="js/ui.js"></script>
+    <script src="js/vortex.js"></script>
+    <script src="js/ethereal.js"></script>
+    <script src="js/player.js"></script>
 
-            openModal(id) {
-                const modal = document.getElementById(id);
-                if(modal) {
-                    modal.classList.remove('modal-hidden');
-                    // Handle specific modal logic
-                    if(id === 'showreel-modal') {
-                        const vid = document.getElementById('reel-vid');
-                        if(vid) vid.play();
-                    }
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const heroTitle = document.getElementById('heroTitle');
+            if (heroTitle && typeof splitToPullUpWords === 'function') splitToPullUpWords(heroTitle, 'Prisma', true);
+
+            const aboutTitle = document.getElementById('aboutTitle');
+            if (aboutTitle && typeof buildMultiStyleHeading === 'function') buildMultiStyleHeading(aboutTitle, [
+                { text: "I am Marcus Chen, ", className: "font-normal text-[#E1E0CC]" },
+                { text: "a self-taught director. ", className: "font-serif-prisma font-normal text-[#DEDBC8] italic" },
+                { text: "I have skills in color grading, visual effects, and narrative design.", className: "font-normal text-[#E1E0CC]" }
+            ]);
+
+            const featuresTitle = document.getElementById('featuresTitle');
+            if (featuresTitle && typeof splitToPullUpWords === 'function') splitToPullUpWords(featuresTitle, 'Studio-grade workflows for visionary creators.', false);
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            if (typeof gsap !== 'undefined') {
+                const heroTL = gsap.timeline();
+                heroTL.fromTo('#heroTitle .pull-up-word', { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, stagger: 0.08, ease: "power4.out" })
+                    .to('#heroDesc', { y: 0, opacity: 1, duration: 0.9, ease: "power4.out" }, "-=0.6")
+                    .to('#heroButton', { y: 0, opacity: 1, duration: 0.9, ease: "power4.out" }, "-=0.75");
+
+                gsap.fromTo('#aboutTitle .pull-up-word', { y: 50, opacity: 0 }, {
+                    scrollTrigger: { trigger: '#aboutTitle', start: 'top 85%', toggleActions: 'play none none none' },
+                    y: 0, opacity: 1, duration: 0.8, stagger: 0.04, ease: "power3.out"
+                });
+
+                const revealTextEl = document.getElementById('aboutRevealText');
+                if (revealTextEl) {
+                    const charactersText = revealTextEl.innerText;
+                    revealTextEl.innerHTML = '';
+                    const charSpans = [];
+                    charactersText.split('').forEach(char => {
+                        const span = document.createElement('span');
+                        span.className = 'reveal-char';
+                        span.style.opacity = '0.15';
+                        span.innerText = char === ' ' ? '\u00A0' : char;
+                        revealTextEl.appendChild(span);
+                        charSpans.push(span);
+                    });
+                    gsap.to(charSpans, {
+                        scrollTrigger: { trigger: '#aboutRevealText', start: 'top 80%', end: 'bottom 45%', scrub: true },
+                        opacity: 1, stagger: 0.02, ease: "none"
+                    });
                 }
-            },
 
-            closeModal(id) {
-                const modal = document.getElementById(id);
-                if(modal) {
-                    modal.classList.add('modal-hidden');
-                    // Reset tool states if applicable
-                    if(id === 'vortex-modal') tools.resetVortex();
-                    if(id === 'showreel-modal') {
-                        const vid = document.getElementById('reel-vid');
-                        if(vid) { vid.pause(); vid.currentTime = 0; }
-                    }
-                }
-            },
+                gsap.fromTo('.feature-card', { scale: 0.95, y: 30, opacity: 0 }, {
+                    scrollTrigger: { trigger: '#features', start: 'top 70%', toggleActions: 'play none none none' },
+                    scale: 1, y: 0, opacity: 1, duration: 0.8, stagger: 0.15, ease: "power2.out"
+                });
 
-            toggleMobileMenu() {
-                const menu = document.getElementById('mobile-menu');
-                const icon = document.getElementById('menu-icon');
-                const isHidden = menu.classList.contains('opacity-0');
-                
-                if (isHidden) {
-                    menu.classList.remove('opacity-0', 'pointer-events-none');
-                    icon.setAttribute('data-lucide', 'x');
-                } else {
-                    menu.classList.add('opacity-0', 'pointer-events-none');
-                    icon.setAttribute('data-lucide', 'menu');
-                }
-                lucide.createIcons();
-            },
+                gsap.fromTo('#featuresTitle .pull-up-word', { y: 40, opacity: 0 }, {
+                    scrollTrigger: { trigger: '#featuresTitle', start: 'top 85%' },
+                    y: 0, opacity: 1, duration: 0.7, stagger: 0.05, ease: "power3.out"
+                });
 
-            submitContact(e) {
-                e.preventDefault();
-                this.closeModal('contact-modal');
-                this.triggerToast('Proposal Sent Successfully.');
-                e.target.reset();
+                gsap.to('#featuresSubtitle', {
+                    scrollTrigger: { trigger: '#featuresTitle', start: 'top 80%' },
+                    opacity: 1, duration: 0.8, delay: 0.2
+                });
             }
-        };
+        });
 
-        // --- Video Background Slider Logic ---
-        const videoSlider = {
-            videos: [],
-            currentIdx: 0,
-            
-            init() {
-                this.videos = Array.from(document.querySelectorAll('#hero-videos video'));
-            },
-
-            goTo(index) {
-                if(this.videos.length === 0) return;
-                
-                // Hide current
-                this.videos[this.currentIdx].style.opacity = '0';
-                
-                // Update index
-                this.currentIdx = index;
-                if(this.currentIdx >= this.videos.length) this.currentIdx = 0;
-                if(this.currentIdx < 0) this.currentIdx = this.videos.length - 1;
-                
-                // Show new
-                this.videos[this.currentIdx].style.opacity = '1';
-                this.videos[this.currentIdx].play();
-            },
-
-            next() { this.goTo(this.currentIdx + 1); },
-            prev() { this.goTo(this.currentIdx - 1); }
-        };
-
-        // --- Mock Tools Logic (Vortex & Ethereal) ---
-        const tools = {
-            // Vortex Logic
-            processVortex() {
-                const input = document.getElementById('vortex-url').value;
-                if(!input) return ui.triggerToast('Please enter a URL');
-
-                document.getElementById('vortex-input-stage').classList.add('hidden');
-                document.getElementById('vortex-loading').classList.remove('hidden');
-                document.getElementById('vortex-loading').classList.add('flex');
-
-                // Simulate API call
-                setTimeout(() => {
-                    document.getElementById('vortex-loading').classList.add('hidden');
-                    document.getElementById('vortex-loading').classList.remove('flex');
-                    document.getElementById('vortex-result').classList.remove('hidden');
-                }, 2000);
-            },
-            resetVortex() {
-                document.getElementById('vortex-url').value = '';
-                document.getElementById('vortex-result').classList.add('hidden');
-                document.getElementById('vortex-loading').classList.add('hidden');
-                document.getElementById('vortex-loading').classList.remove('flex');
-                document.getElementById('vortex-input-stage').classList.remove('hidden');
-            },
-
-            // Ethereal Logic
-            loadMockImage() {
-                document.getElementById('ethereal-empty').classList.add('hidden');
-                // Normally you'd show original image, but for mock we'll auto trigger process
-                this.processEthereal();
-            },
-            processEthereal() {
-                if(!document.getElementById('ethereal-empty').classList.contains('hidden')) {
-                    return ui.triggerToast('Please upload an image first');
-                }
-                
-                document.getElementById('ethereal-result').classList.add('hidden');
-                document.getElementById('ethereal-loading').classList.remove('hidden');
-                document.getElementById('ethereal-loading').classList.add('flex');
-
-                // Simulate processing
-                setTimeout(() => {
-                    document.getElementById('ethereal-loading').classList.add('hidden');
-                    document.getElementById('ethereal-loading').classList.remove('flex');
-                    document.getElementById('ethereal-result').classList.remove('hidden');
-                    ui.triggerToast('Background removed via Local AI');
-                }, 2500);
-            }
-        };
-
-        // --- Initialize Everything ---
         document.addEventListener('DOMContentLoaded', () => {
-            videoSlider.init();
-
-            // Setup GSAP Scroll Animations
-            if(typeof gsap !== 'undefined') {
-                gsap.registerPlugin(ScrollTrigger);
-
-                // Reveal elements on scroll
-                const revealElements = document.querySelectorAll('.gs-reveal');
-                revealElements.forEach((el) => {
-                    gsap.fromTo(el, 
-                        { y: 50, opacity: 0 },
-                        {
-                            scrollTrigger: {
-                                trigger: el,
-                                start: "top 85%",
-                                toggleActions: "play none none none"
-                            },
-                            y: 0,
-                            opacity: 1,
-                            duration: 1,
-                            ease: "power3.out"
-                        }
-                    );
-                });
-
-                // Navbar blur effect on scroll
-                const nav = document.getElementById('navbar');
-                window.addEventListener('scroll', () => {
-                    if (window.scrollY > 50) {
-                        nav.classList.add('bg-black/50', 'backdrop-blur-md', 'border-b', 'border-white/5');
-                    } else {
-                        nav.classList.remove('bg-black/50', 'backdrop-blur-md', 'border-b', 'border-white/5');
-                    }
-                });
-            }
+            if (typeof initHeroScatterFX === 'function') initHeroScatterFX();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         });
     </script>
 </body>
