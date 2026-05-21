@@ -301,21 +301,100 @@
 
 
 
-        <video 
-    autoplay 
-    muted 
-    loop 
-    playsinline 
-    preload="auto"
-    class="absolute inset-0 h-full w-full object-cover opacity-100 brightness-110 contrast-110 saturate-125"
->
-    <source 
-        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4" 
-        type="video/mp4" 
-    />
-</video>
+      <!-- VIDEO BACKGROUND -->
+<div class="absolute inset-0 overflow-hidden">
 
+    <!-- VIDEO 1 -->
+    <video 
+        id="bgVideo"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        class="absolute inset-0 h-full w-full object-cover brightness-110 contrast-110 saturate-125 transition-all duration-700"
+    >
+        <source 
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4"
+            type="video/mp4"
+        >
+    </video>
 
+    <!-- OVERLAY -->
+    <div class="absolute inset-0 bg-black/25"></div>
+
+    <!-- BUTTON LEFT -->
+    <button
+        onclick="prevVideo()"
+        class="absolute left-5 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all duration-300"
+    >
+        ‹
+    </button>
+
+    <!-- BUTTON RIGHT -->
+    <button
+        onclick="nextVideo()"
+        class="absolute right-5 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all duration-300"
+    >
+        ›
+    </button>
+
+</div>
+
+<script>
+
+const videos = [
+
+    "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4",
+
+    "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260503_144509_89e2d612-8af2-45c3-90f4-4831bc60715d.mp4"
+
+];
+
+let currentVideo = 0;
+
+const videoElement = document.getElementById("bgVideo");
+
+function changeVideo(index){
+
+    videoElement.style.opacity = "0";
+
+    setTimeout(() => {
+
+        videoElement.src = videos[index];
+
+        videoElement.load();
+
+        videoElement.play();
+
+        videoElement.style.opacity = "1";
+
+    }, 300);
+}
+
+function nextVideo(){
+
+    currentVideo++;
+
+    if(currentVideo >= videos.length){
+        currentVideo = 0;
+    }
+
+    changeVideo(currentVideo);
+}
+
+function prevVideo(){
+
+    currentVideo--;
+
+    if(currentVideo < 0){
+        currentVideo = videos.length - 1;
+    }
+
+    changeVideo(currentVideo);
+}
+
+</script>
 
 
 
